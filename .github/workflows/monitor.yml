@@ -1,9 +1,11 @@
 name: LP range monitor
 
 on:
-  schedule:
-    - cron: "0 * * * *"   # top of every hour (UTC). GitHub may delay runs under load.
-  workflow_dispatch: {}    # allows manual "Run workflow"
+  # Scheduling is outsourced to cron-job.org, which POSTs to the
+  # workflow_dispatch API hourly. GitHub's own `schedule:` trigger is
+  # deliberately absent: it is delayed under load and auto-disabled after
+  # 60 days of repo inactivity.
+  workflow_dispatch: {}    # external trigger + manual "Run workflow"
 
 permissions:
   contents: write          # needed to commit status.md/state.json back
