@@ -26,31 +26,41 @@ jobs:
 
       - run: npm ci
 
+      # Self-throttled: only calls Dune when pools_allowlist.json is >20h old,
+      # and no-ops entirely if DUNE_API_KEY is unset (keeps the existing file).
+      - name: Refresh TVL allowlist (daily, via Dune)
+        env:
+          DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
+          DUNE_TVL_THRESHOLD: "100"
+        run: node refresh_allowlist.mjs
+
       - name: Run out-of-range check
         run: node check.mjs
 
-      - name: Detect whether the out-of-range set changed (a flip)
+      - name: Detect changes (range flip and/or allowlist refresh)
         id: diff
         run: |
-          git add status.md state.json alerts.log
-          if git diff --cached --quiet -- state.json; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No range change this run."
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Range change detected."
-          fi
+          git add status.md state.json alerts.log pools_allowlist.json
+          range=false; allow=false
+          git diff --cached --quiet -- state.json || range=true
+          git diff --cached --quiet -- pools_allowlist.json || allow=true
+          echo "range=$range" >> "$GITHUB_OUTPUT"
+          echo "allow=$allow" >> "$GITHUB_OUTPUT"
+          echo "range flip: $range | allowlist changed: $allow"
 
-      - name: Commit status back (only on a flip)
-        if: steps.diff.outputs.changed == 'true'
+      - name: Commit back (on flip or allowlist refresh)
+        if: steps.diff.outputs.range == 'true' || steps.diff.outputs.allow == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "LP range change $(date -u +%FT%TZ) [skip ci]"
+          msg=""
+          [ "${{ steps.diff.outputs.range }}" = "true" ] && msg="LP range change"
+          [ "${{ steps.diff.outputs.allow }}" = "true" ] && msg="${msg:+$msg + }allowlist refresh"
+          git commit -m "$msg $(date -u +%FT%TZ) [skip ci]"
           git push
 
-      - name: Slack alert (only on a flip; no-op if webhook secret unset)
-        if: steps.diff.outputs.changed == 'true'
+      - name: Slack alert (only on a range flip; no-op if webhook secret unset)
+        if: steps.diff.outputs.range == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
