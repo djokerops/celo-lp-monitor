@@ -27,14 +27,34 @@ jobs:
       - name: Run out-of-range check
         run: node check.mjs
 
-      - name: Commit status only when the out-of-range set changes
+      - name: Detect whether the out-of-range set changed (a flip)
+        id: diff
+        run: |
+          git add status.md state.json alerts.log
+          if git diff --cached --quiet -- state.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No range change this run."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Range change detected."
+          fi
+
+      - name: Commit status back (only on a flip)
+        if: steps.diff.outputs.changed == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add status.md state.json alerts.log
-          if git diff --cached --quiet -- state.json; then
-            echo "No range change this run — leaving repo untouched."
-          else
-            git commit -m "LP range change $(date -u +%FT%TZ) [skip ci]"
-            git push
+          git commit -m "LP range change $(date -u +%FT%TZ) [skip ci]"
+          git push
+
+      - name: Slack alert (only on a flip; no-op if webhook secret unset)
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not set — skipping Slack post."
+            exit 0
           fi
+          payload=$(node -e "const fs=require('fs');process.stdout.write(JSON.stringify({text:'*Celo LP alert*\n\n'+fs.readFileSync('status.md','utf8')}))")
+          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
