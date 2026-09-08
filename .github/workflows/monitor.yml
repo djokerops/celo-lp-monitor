@@ -31,7 +31,7 @@ jobs:
       - name: Refresh TVL allowlist (daily, via Dune)
         env:
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
-          DUNE_TVL_THRESHOLD: "100"
+          DUNE_TVL_THRESHOLD: "500"
         run: node refresh_allowlist.mjs
 
       - name: Run out-of-range check
