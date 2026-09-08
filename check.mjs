@@ -13,8 +13,23 @@ const STATE_FILE = join(__dir, "state.json");
 const STATUS_MD = join(__dir, "status.md");
 const ALERTS_LOG = join(__dir, "alerts.log");
 const RUN_LOG = join(__dir, "run.log");
+const ALLOWLIST_FILE = join(__dir, "pools_allowlist.json");
 
 const log = (file, line) => { try { appendFileSync(file, line + "\n"); } catch {} };
+
+// Pools worth monitoring: those with internal TVL >= threshold, sourced from the
+// Dune query and stored in pools_allowlist.json. Positions in any other pool are
+// dust and skipped. Fail-OPEN: if the file is missing/empty, track everything
+// (better to over-alert than silently go dark).
+function loadAllowlist() {
+  try {
+    const a = JSON.parse(readFileSync(ALLOWLIST_FILE, "utf8"));
+    const pools = new Set(Object.keys(a.pools || {}).map(x => x.toLowerCase()));
+    return { pools, thresholdUsd: a.thresholdUsd ?? null, active: pools.size > 0, generatedAt: a.generatedAt ?? null };
+  } catch {
+    return { pools: new Set(), thresholdUsd: null, active: false, generatedAt: null };
+  }
+}
 
 const RPC = "https://forno.celo.org";
 const NFPM = "0x3d79EdAaBC0EaB6F08ED885C05Fc0B014290D95A";
@@ -99,7 +114,11 @@ function renderStatus(r) {
     out.push(``, `**⚠️ Newly out this run:** ` + r.newlyOutOfRange.map(p => `${p.label} ${p.pair}`).join(", "));
   if (r.recovered.length)
     out.push(``, `**🟢 Back in range this run:** ` + r.recovered.join(", "));
-  out.push(``, `---`, `${r.totalOpenPositions} open positions checked · ${r.errors.length} error(s)`);
+  const f = r.tvlFilter || {};
+  const filterNote = f.thresholdUsd
+    ? ` · pools ≥ $${f.thresholdUsd.toLocaleString()} only (${f.poolsTracked} tracked, ${f.positionsSkippedAsDust} dust skipped)`
+    : "";
+  out.push(``, `---`, `${r.totalOpenPositions} open positions checked · ${r.errors.length} error(s)${filterNote}`);
   if (r.errors.length) out.push(``, "```", ...r.errors.slice(0, 5), "```");
   return out.join("\n") + "\n";
 }
@@ -114,6 +133,8 @@ async function positionsFor(owner) {
 async function main() {
   const results = [];
   const errors = [];
+  const allow = loadAllowlist();
+  let skippedDust = 0;
 
   for (const [owner, label] of WATCHED) {
     let ids;
@@ -127,6 +148,7 @@ async function main() {
         const tickLower = Number(p.tickLower);
         const tickUpper = Number(p.tickUpper);
         const pool = await getPool(p.token0, p.token1, p.fee);
+        if (allow.active && !allow.pools.has(pool.toLowerCase())) { skippedDust++; continue; } // pool below TVL threshold
         const tick = await poolTick(pool);
         const inRange = tick >= tickLower && tick < tickUpper;
         const side = inRange ? null : (tick < tickLower ? "below" : "above");
@@ -166,6 +188,9 @@ async function main() {
     checkedAt: new Date().toISOString(),
     totalOpenPositions: results.length,
     outOfRangeCount: outNow.length,
+    tvlFilter: allow.active
+      ? { thresholdUsd: allow.thresholdUsd, poolsTracked: allow.pools.size, positionsSkippedAsDust: skippedDust }
+      : { thresholdUsd: null, note: "allowlist missing/empty — tracking all pools" },
     newlyOutOfRange: newlyOut,
     recovered,
     outOfRange: outNow,
