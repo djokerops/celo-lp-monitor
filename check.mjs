@@ -5,7 +5,6 @@
 
 import { ethers } from "ethers";
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from "node:fs";
-import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -15,11 +14,6 @@ const STATUS_MD = join(__dir, "status.md");
 const ALERTS_LOG = join(__dir, "alerts.log");
 const RUN_LOG = join(__dir, "run.log");
 
-// macOS desktop banner (no-op / harmless off macOS).
-function notify(title, message) {
-  const esc = (s) => String(s).replace(/["\\]/g, "\\$&");
-  execFile("osascript", ["-e", `display notification "${esc(message)}" with title "${esc(title)}"`], () => {});
-}
 const log = (file, line) => { try { appendFileSync(file, line + "\n"); } catch {} };
 
 const RPC = "https://forno.celo.org";
@@ -190,16 +184,9 @@ async function main() {
   for (const r of newlyOut) lines.push(`🔴 OUT: ${r.label} ${r.pair} (${r.feeTier}) #${r.tokenId} — price ${r.side} range, ${r.gapPct}% out`);
   for (const k of recovered) lines.push(`🟢 BACK IN RANGE: ${k}`);
 
-  if (lines.length) {
-    for (const l of lines) log(ALERTS_LOG, `${ts} ${l}`);
-    const title = newlyOut.length
-      ? `🔴 ${newlyOut.length} LP position${newlyOut.length > 1 ? "s" : ""} out of range`
-      : `🟢 LP position${recovered.length > 1 ? "s" : ""} back in range`;
-    const body = (newlyOut.length ? newlyOut : recovered.map(k => ({ label: k })))
-      .slice(0, 4).map(r => r.pair ? `${r.label} ${r.pair}` : r.label).join(", ")
-      + (lines.length > 4 ? ` +${lines.length - 4} more` : "");
-    notify(title, body);
-  }
+  // Transitions are recorded to alerts.log (committed by CI) and surfaced via
+  // status.md. No desktop banner: delivery is GitHub -> reader -> your app.
+  for (const l of lines) log(ALERTS_LOG, `${ts} ${l}`);
 }
 
 main().catch(e => { console.error(JSON.stringify({ fatal: e.message })); process.exit(1); });
