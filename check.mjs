@@ -162,9 +162,10 @@ async function main() {
   const newlyOut = outNow.filter(r => !prev.has(r.key));
   const recovered = [...prev].filter(k => !outKeys.has(k));
 
+  // No timestamp here on purpose: this file must change ONLY when the
+  // out-of-range set changes, so CI can use its git-diff as the flip trigger.
   writeFileSync(STATE_FILE, JSON.stringify({
-    updatedAt: new Date().toISOString(),
-    outOfRange: [...outKeys],
+    outOfRange: [...outKeys].sort(),
   }, null, 2));
 
   const report = {

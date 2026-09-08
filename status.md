@@ -1,6 +1,6 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-09-08T11:56:20.422Z_
+_Last checked: 2026-09-08T11:59:42.127Z_
 
 ## 🔴 2 positions OUT OF RANGE
 
