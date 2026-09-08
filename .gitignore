@@ -1,0 +1,5 @@
+node_modules/
+run.log
+launchd.out
+launchd.err
+launchd_test.err
