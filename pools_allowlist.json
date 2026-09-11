@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-10T21:59:30.142Z",
+  "generatedAt": "2026-09-11T18:00:19.567Z",
   "thresholdUsd": 500,
   "source": "dune query 8390438 (uni-internal-liq-per-pool)",
   "pools": {
