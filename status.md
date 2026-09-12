@@ -1,15 +1,14 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-09-11T21:00:35.270Z_
+_Last checked: 2026-09-12T00:00:34.754Z_
 
-## 🔴 2 positions OUT OF RANGE
+## 🔴 1 position OUT OF RANGE
 
 | LP | Pair | Fee | Side | % out | tokenId |
 |----|------|-----|------|-------|---------|
 | APF | USD₮/AUDm | 0.01% | below | 0.26% | 200153 |
-| APF | USD₮/USDC | 0.01% | below | 0.01% | 201522 |
 
-**⚠️ Newly out this run:** APF USD₮/USDC
+**🟢 Back in range this run:** APF#201522
 
 ---
 23 open positions checked · 0 error(s) · pools ≥ $500 only (17 tracked, 3 dust skipped)
