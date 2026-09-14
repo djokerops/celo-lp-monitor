@@ -31,8 +31,13 @@ jobs:
       - name: Refresh TVL allowlist (daily, via Dune)
         env:
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
-          DUNE_TVL_THRESHOLD: "500"
+          DUNE_TVL_THRESHOLD: "100"
         run: node refresh_allowlist.mjs
+
+      # Pool-wide health (Dexscreener). Never fails the job; check.mjs reads its
+      # output if present and simply omits the section if it is not.
+      - name: Pool health check
+        run: node pool_health.mjs
 
       - name: Run out-of-range check
         run: node check.mjs
@@ -40,26 +45,36 @@ jobs:
       - name: Detect changes (range flip and/or allowlist refresh)
         id: diff
         run: |
-          git add status.md state.json alerts.log pools_allowlist.json
-          range=false; allow=false
+          # tvl_history.json does not exist until the first pool-health run, and a
+          # missing pathspec would fail this step and with it the whole monitor.
+          for f in status.md state.json alerts.log pools_allowlist.json tvl_history.json; do
+            [ -f "$f" ] || continue
+            git add "$f"
+          done
+          range=false; allow=false; hist=false
           git diff --cached --quiet -- state.json || range=true
           git diff --cached --quiet -- pools_allowlist.json || allow=true
+          git diff --cached --quiet -- tvl_history.json || hist=true
           echo "range=$range" >> "$GITHUB_OUTPUT"
           echo "allow=$allow" >> "$GITHUB_OUTPUT"
-          echo "range flip: $range | allowlist changed: $allow"
+          echo "hist=$hist" >> "$GITHUB_OUTPUT"
+          echo "flag change: $range | allowlist changed: $allow | daily TVL sample: $hist"
 
-      - name: Commit back (on flip or allowlist refresh)
-        if: steps.diff.outputs.range == 'true' || steps.diff.outputs.allow == 'true'
+      - name: Commit back (on flag change, allowlist refresh or daily TVL sample)
+        if: steps.diff.outputs.range == 'true' || steps.diff.outputs.allow == 'true' || steps.diff.outputs.hist == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           msg=""
           [ "${{ steps.diff.outputs.range }}" = "true" ] && msg="LP range change"
           [ "${{ steps.diff.outputs.allow }}" = "true" ] && msg="${msg:+$msg + }allowlist refresh"
-          git commit -m "$msg $(date -u +%FT%TZ) [skip ci]"
+          [ "${{ steps.diff.outputs.hist }}" = "true" ] && msg="${msg:+$msg + }daily TVL sample"
+          git commit -m "${msg:-status update} $(date -u +%FT%TZ) [skip ci]"
           git push
 
-      - name: Slack alert (only on a range flip; no-op if webhook secret unset)
+      # Only flag changes ping Slack. A daily TVL sample or an allowlist refresh
+      # is bookkeeping, not an event.
+      - name: Slack alert (only on a flag change; no-op if webhook secret unset)
         if: steps.diff.outputs.range == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

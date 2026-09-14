@@ -14,6 +14,14 @@ const STATUS_MD = join(__dir, "status.md");
 const ALERTS_LOG = join(__dir, "alerts.log");
 const RUN_LOG = join(__dir, "run.log");
 const ALLOWLIST_FILE = join(__dir, "pools_allowlist.json");
+const POOL_HEALTH_FILE = join(__dir, "pool_health.json");
+
+// A position's distance past its range edge only means something relative to how
+// wide that range is: our ranges span 0.06% to 422%, so a fixed % is simultaneously
+// too tight for one and too loose for another. Both thresholds are fractions of the
+// position's own width.
+const GAP_WIDTH_FLAG = Number(process.env.GAP_WIDTH_FLAG ?? 20);      // worth a human look
+const GAP_WIDTH_URGENT = Number(process.env.GAP_WIDTH_URGENT ?? 100); // a full band out
 
 const log = (file, line) => { try { appendFileSync(file, line + "\n"); } catch {} };
 
@@ -99,26 +107,73 @@ async function poolTick(pool) {
 // Convert a tick gap to an approximate % price gap (1.0001^ticks).
 const pct = (ticks) => (Math.pow(1.0001, Math.abs(ticks)) - 1) * 100;
 
+const fmtUsd = (n) => n >= 1 ? `$${Math.round(n).toLocaleString()}` : `$${n.toFixed(4)}`;
+const fmtPrice = (n) => n >= 1 ? `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : `$${n.toPrecision(4)}`;
+
 // Render the repo-committed status.md that the reader automation relays.
+// Only flagged items appear: an all-clear run produces a short file, and pools
+// that are behaving are not listed at all.
+const FLAG_LABEL = {
+  peg_break: "🔴 peg break",
+  tvl_swing: "⚠️ TVL swing",
+  skew_shift: "⚠️ skew shift",
+  volatile_swing: "⚠️ volatile swing",
+  partner_redeposit: "🟢 partner redeposit",
+};
+
 function renderStatus(r) {
   const out = [`# Celo LP Range Monitor`, ``, `_Last checked: ${r.checkedAt}_`, ``];
-  if (r.outOfRange.length === 0) {
-    out.push(`## ✅ All ${r.totalOpenPositions} positions in range`);
+
+  // --- positions ---
+  const flagged = r.flaggedPositions || [];
+  if (flagged.length === 0) {
+    out.push(`## ✅ All ${r.totalOpenPositions} positions within tolerance`);
+    if (r.marginalCount)
+      out.push(``, `_${r.marginalCount} position${r.marginalCount > 1 ? "s sit" : " sits"} just outside range but under the ${r.thresholds.gapWidthFlagPct}%-of-range tolerance._`);
   } else {
-    out.push(`## 🔴 ${r.outOfRange.length} position${r.outOfRange.length > 1 ? "s" : ""} OUT OF RANGE`, ``);
-    out.push(`| LP | Pair | Fee | Side | % out | tokenId |`, `|----|------|-----|------|-------|---------|`);
-    for (const p of r.outOfRange)
-      out.push(`| ${p.label} | ${p.pair} | ${p.feeTier} | ${p.side} | ${p.gapPct}% | ${p.tokenId} |`);
+    out.push(`## 🔴 ${flagged.length} position${flagged.length > 1 ? "s" : ""} beyond tolerance`, ``);
+    out.push(`| LP | Pair | Fee | Side | % out | % of range | tokenId |`, `|----|------|-----|------|-------|------------|---------|`);
+    for (const p of flagged) {
+      const urgent = p.gapWidthPct >= r.thresholds.gapWidthUrgentPct ? " 🔺" : "";
+      out.push(`| ${p.label} | ${p.pair} | ${p.feeTier} | ${p.side} | ${p.gapPct}% | ${p.gapWidthPct}%${urgent} | ${p.tokenId} |`);
+    }
   }
   if (r.newlyOutOfRange.length)
     out.push(``, `**⚠️ Newly out this run:** ` + r.newlyOutOfRange.map(p => `${p.label} ${p.pair}`).join(", "));
   if (r.recovered.length)
     out.push(``, `**🟢 Back in range this run:** ` + r.recovered.join(", "));
+
+  // --- pool health: flagged pools only ---
+  const ph = r.poolHealth;
+  const flaggedPools = ph ? ph.pools.filter(p => p.flags.some(f => f.notify)) : [];
+  if (flaggedPools.length) {
+    out.push(``, `## ⚠️ Pool health — ${flaggedPools.length} flagged: ${flaggedPools.map(p => p.pair).join(", ")}`, ``);
+    out.push(`| Pool | TVL | Price | Balance split | vs. baseline | Status |`, `|------|-----|-------|---------------|--------------|--------|`);
+    for (const p of flaggedPools) {
+      const star = p.liz ? " ⭑" : "";
+      const split = p.skew ? `${p.skew.basePct.toFixed(0)}% ${p.skew.baseSym} / ${(100 - p.skew.basePct).toFixed(0)}% ${p.skew.quoteSym}` : "—";
+      const dev = p.devPct == null ? `baseline building (${p.baselineSamples}d)` : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
+      const status = p.flags.filter(f => f.notify).map(f => FLAG_LABEL[f.type] || f.type).join(", ");
+      out.push(`| ${p.pair}${star} | ${fmtUsd(p.tvlUsd ?? 0)} | ${fmtPrice(p.priceUsd ?? 0)} | ${split} | ${dev} | ${status} |`);
+    }
+    out.push(``);
+    for (const p of flaggedPools)
+      for (const f of p.flags.filter(f => f.notify)) out.push(`**${p.pair}** — ${f.detail}`, ``);
+    if (flaggedPools.some(p => p.liz)) out.push(`⭑ = on the daily pool list`, ``);
+  }
+
+  // --- footer ---
+  while (out.length && out[out.length - 1] === "") out.pop();
   const f = r.tvlFilter || {};
   const filterNote = f.thresholdUsd
-    ? ` · pools ≥ $${f.thresholdUsd.toLocaleString()} only (${f.poolsTracked} tracked, ${f.positionsSkippedAsDust} dust skipped)`
+    ? ` · pools ≥ $${f.thresholdUsd.toLocaleString()} (${f.poolsTracked} tracked, ${f.positionsSkippedAsDust} dust skipped)`
     : "";
   out.push(``, `---`, `${r.totalOpenPositions} open positions checked · ${r.errors.length} error(s)${filterNote}`);
+  if (ph) {
+    const noData = ph.pools.filter(p => p.unavailable);
+    out.push(`Pool health: ${ph.poolsChecked} pools checked, ${flaggedPools.length} flagged`
+      + (noData.length ? ` · no market data for ${noData.map(p => p.pair).join(", ")}` : ""));
+  }
   if (r.errors.length) out.push(``, "```", ...r.errors.slice(0, 5), "```");
   return out.join("\n") + "\n";
 }
@@ -162,38 +217,72 @@ async function main() {
           pool, tick, tickLower, tickUpper,
           inRange, side,
           gapTicks, gapPct: inRange ? 0 : +pct(gapTicks).toFixed(2),
+          rangeWidthPct: +pct(tickUpper - tickLower).toFixed(2),
+          gapWidthPct: inRange ? 0 : +((pct(gapTicks) / pct(tickUpper - tickLower)) * 100).toFixed(1),
         });
       } catch (e) { errors.push(`${label}#${id}: ${e.message}`); }
     }
   }
 
   const outNow = results.filter(r => !r.inRange);
-  const outKeys = new Set(outNow.map(r => r.key));
+  // Only positions past GAP_WIDTH_FLAG are events. A position loitering a fraction
+  // of a percent outside a wide band is noise: #200153 sat 0.26% out for three days
+  // and came back on its own without anyone touching it.
+  const flaggedPositions = outNow.filter(r => r.gapWidthPct >= GAP_WIDTH_FLAG);
+  const outKeys = new Set(flaggedPositions.map(r => r.key));
+  const marginalCount = outNow.length - flaggedPositions.length;
+
+  // --- pool health, produced by pool_health.mjs earlier in the run ---
+  let poolHealth = null;
+  if (existsSync(POOL_HEALTH_FILE)) {
+    try { poolHealth = JSON.parse(readFileSync(POOL_HEALTH_FILE, "utf8")); } catch {}
+  }
 
   // --- transition detection via state file ---
   let prev = new Set();
+  let prevPoolFlags = [];
   if (existsSync(STATE_FILE)) {
-    try { prev = new Set(JSON.parse(readFileSync(STATE_FILE, "utf8")).outOfRange || []); } catch {}
+    try {
+      const st = JSON.parse(readFileSync(STATE_FILE, "utf8"));
+      prev = new Set(st.outOfRange || []);
+      prevPoolFlags = st.poolFlags || [];
+    } catch {}
   }
-  const newlyOut = outNow.filter(r => !prev.has(r.key));
+  const newlyOut = flaggedPositions.filter(r => !prev.has(r.key));
   const recovered = [...prev].filter(k => !outKeys.has(k));
 
-  // No timestamp here on purpose: this file must change ONLY when the
-  // out-of-range set changes, so CI can use its git-diff as the flip trigger.
+  // If pool_health.mjs could not run, carry the previous flags forward rather than
+  // silently clearing them (which would read as "everything recovered").
+  const poolFlags = poolHealth
+    ? poolHealth.pools.flatMap(p => p.flags.filter(f => f.notify).map(f => `${p.pair}:${f.type}`)).sort()
+    : prevPoolFlags;
+  const newPoolFlags = poolFlags.filter(f => !prevPoolFlags.includes(f));
+  const clearedPoolFlags = prevPoolFlags.filter(f => !poolFlags.includes(f));
+
+  // No timestamp here on purpose: this file must change ONLY when something
+  // flag-worthy changes, so CI can use its git-diff as the commit trigger.
   writeFileSync(STATE_FILE, JSON.stringify({
     outOfRange: [...outKeys].sort(),
+    poolFlags,
   }, null, 2));
 
   const report = {
     checkedAt: new Date().toISOString(),
     totalOpenPositions: results.length,
     outOfRangeCount: outNow.length,
+    flaggedCount: flaggedPositions.length,
+    marginalCount,
+    thresholds: { gapWidthFlagPct: GAP_WIDTH_FLAG, gapWidthUrgentPct: GAP_WIDTH_URGENT },
     tvlFilter: allow.active
       ? { thresholdUsd: allow.thresholdUsd, poolsTracked: allow.pools.size, positionsSkippedAsDust: skippedDust }
       : { thresholdUsd: null, note: "allowlist missing/empty — tracking all pools" },
     newlyOutOfRange: newlyOut,
     recovered,
     outOfRange: outNow,
+    flaggedPositions,
+    poolHealth,
+    newPoolFlags,
+    clearedPoolFlags,
     errors,
   };
   console.log(JSON.stringify(report, null, 2));
@@ -203,11 +292,13 @@ async function main() {
 
   // --- delivery: macOS banner + logs, only on transitions ---
   const ts = new Date().toISOString();
-  log(RUN_LOG, `${ts} open=${results.length} out=${outNow.length} newlyOut=${newlyOut.length} recovered=${recovered.length} errors=${errors.length}`);
+  log(RUN_LOG, `${ts} open=${results.length} out=${outNow.length} flagged=${flaggedPositions.length} marginal=${marginalCount} poolFlags=${poolFlags.length} newlyOut=${newlyOut.length} recovered=${recovered.length} errors=${errors.length}`);
 
   const lines = [];
-  for (const r of newlyOut) lines.push(`🔴 OUT: ${r.label} ${r.pair} (${r.feeTier}) #${r.tokenId} — price ${r.side} range, ${r.gapPct}% out`);
+  for (const r of newlyOut) lines.push(`🔴 OUT: ${r.label} ${r.pair} (${r.feeTier}) #${r.tokenId} — price ${r.side} range, ${r.gapPct}% out (${r.gapWidthPct}% of its range)`);
   for (const k of recovered) lines.push(`🟢 BACK IN RANGE: ${k}`);
+  for (const f of newPoolFlags) lines.push(`⚠️ POOL: ${f}`);
+  for (const f of clearedPoolFlags) lines.push(`🟢 POOL CLEARED: ${f}`);
 
   // Transitions are recorded to alerts.log (committed by CI) and surfaced via
   // status.md. No desktop banner: delivery is GitHub -> reader -> your app.
