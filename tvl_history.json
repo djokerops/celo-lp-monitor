@@ -232,6 +232,24 @@
         "skewPct": 32.10058140152492,
         "internalUsd": 65565.56
       }
+    ],
+    "0x14e577e42d45fd2200a9b0e31d87fe826467111a": [
+      {
+        "day": "2026-09-15",
+        "source": "dune-internal",
+        "tvlUsd": 15483.63,
+        "skewPct": null,
+        "internalUsd": 15483.63
+      }
+    ],
+    "0xae073a816117dcd1cc237fe4cb99f89f8f8bff4f": [
+      {
+        "day": "2026-09-15",
+        "source": "onchain",
+        "tvlUsd": 1.427002396704423,
+        "skewPct": 50.33553389701863,
+        "internalUsd": 0
+      }
     ]
   }
 }
