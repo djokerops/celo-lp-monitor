@@ -15,6 +15,7 @@ const ALERTS_LOG = join(__dir, "alerts.log");
 const RUN_LOG = join(__dir, "run.log");
 const ALLOWLIST_FILE = join(__dir, "pools_allowlist.json");
 const POOL_HEALTH_FILE = join(__dir, "pool_health.json");
+const SLACK_PAYLOAD = join(__dir, "slack_payload.json");
 
 // A position's distance past its range edge only means something relative to how
 // wide that range is: our ranges span 0.06% to 422%, so a fixed % is simultaneously
@@ -140,6 +141,74 @@ function rangeCell(r, p) {
   if (rg.anyFlagged) return `out ${rg.worstGapPct}%`;
   if (rg.anyOut) return "below tolerance";
   return "in range";
+}
+
+// Slack renders no tables at all -- pipes come through literally -- so the table
+// is emitted as a fixed-width code block instead, trimmed to the columns that fit
+// a phone. Flags go above it as plain lines, since they are the part worth reading.
+const shortUsd = (n) =>
+  n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M`
+  : n >= 1e3 ? `$${(n / 1e3).toFixed(1)}k`
+  : `$${n.toFixed(n < 10 ? 2 : 0)}`;
+
+const SHORT_FLAG = {
+  peg_break: "peg break", tvl_swing: "TVL swing", skew_shift: "skew shift",
+  volatile_swing: "volatile", partner_redeposit: "partner redeposit",
+};
+
+function renderSlack(r) {
+  const ph = r.poolHealth;
+  const flaggedPools = ph ? ph.pools.filter(p => p.flags.some(f => f.notify)) : [];
+  const posFlagged = r.flaggedPositions || [];
+  const clean = posFlagged.length === 0 && flaggedPools.length === 0;
+
+  const head = r.digest
+    ? `${clean ? "🟢" : "🔴"} Celo LP — daily digest`
+    : `🔴 Celo LP — incident update`;
+
+  const lines = [];
+  lines.push(posFlagged.length
+    ? `*${posFlagged.length} position${posFlagged.length > 1 ? "s" : ""} beyond tolerance* — `
+      + posFlagged.map(p => `${p.label} ${p.pair} (${p.gapPct}%, ${p.gapWidthPct}% of range)`).join(", ")
+    : `*All ${r.totalOpenPositions} positions within tolerance*`
+      + (r.marginalCount ? ` _(${r.marginalCount} marginally out, under the ${r.thresholds.gapWidthFlagPct}% bar)_` : ""));
+  lines.push(flaggedPools.length
+    ? `*${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged* — ${flaggedPools.map(p => p.pair).join(", ")}`
+    : `*All clear — no pool flags*`);
+
+  const detail = [];
+  for (const p of flaggedPools)
+    for (const f of p.flags.filter(f => f.notify)) detail.push(`• *${p.pair}* — ${f.detail}`);
+
+  // fixed-width table: pool / TVL / 24h / range. Status lives in the lines above.
+  const rows = ph ? [...ph.pools].filter(p => !p.unavailable).sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0)) : [];
+  const cell = (p) => {
+    const mark = p.source === "onchain" ? "†" : p.source === "dune-internal" ? "‡" : " ";
+    const rg = r.poolRange?.[String(p.pool).toLowerCase()];
+    const range = !rg || !rg.count ? "—" : rg.anyFlagged ? `out ${rg.worstGapPct}%` : rg.anyOut ? "below tol" : "in range";
+    const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
+    const flag = p.flags.filter(f => f.notify).map(f => SHORT_FLAG[f.type] || f.type).join(",");
+    // plain ASCII star inside the code block: ⭑ is double-width in some monospace
+    // fonts, which would shear the column alignment.
+    return [(p.pair + (p.liz ? " *" : "")).slice(0, 21), shortUsd(p.tvlUsd ?? 0) + mark, dev, flag || range];
+  };
+  const body = rows.map(cell);
+  const head4 = ["POOL", "TVL", "24H", "RANGE"];
+  const w = head4.map((h, i) => Math.max(h.length, ...body.map(b => b[i].length)));
+  const fmtRow = (c) => c.map((v, i) => i === 0 ? v.padEnd(w[i]) : v.padStart(w[i])).join("  ");
+  const table = ["```", fmtRow(head4), ...body.map(fmtRow), "```"].join("\n");
+
+  const blocks = [
+    { type: "header", text: { type: "plain_text", text: head, emoji: true } },
+    { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
+  ];
+  if (detail.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: detail.join("\n").slice(0, 2900) } });
+  blocks.push({ type: "section", text: { type: "mrkdwn", text: table.slice(0, 2900) } });
+  blocks.push({ type: "context", elements: [{ type: "mrkdwn", text:
+    `${r.checkedAt} · * daily list · † on-chain · ‡ internal only · <https://github.com/djokerops/celo-lp-monitor/blob/main/status.md|full report>` }] });
+
+  // text is the notification preview and the fallback where blocks cannot render
+  return { text: `${head} — ${posFlagged.length} position(s), ${flaggedPools.length} pool(s) flagged`, blocks };
 }
 
 function renderStatus(r) {
@@ -371,7 +440,10 @@ async function main() {
   // --- status.md is rewritten ONLY on a publish ---
   // Leaving the file untouched on a quiet run is what keeps CI from committing and
   // Slack from posting: the hourly check happens, but nothing downstream moves.
-  if (publish) writeFileSync(STATUS_MD, renderStatus(report));
+  if (publish) {
+    writeFileSync(STATUS_MD, renderStatus(report));
+    writeFileSync(SLACK_PAYLOAD, JSON.stringify(renderSlack(report), null, 2) + "\n");
+  }
 
   // --- delivery: macOS banner + logs, only on transitions ---
   const ts = new Date().toISOString();

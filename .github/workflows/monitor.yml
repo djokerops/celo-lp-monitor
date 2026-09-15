@@ -90,5 +90,13 @@ jobs:
             echo "SLACK_WEBHOOK_URL not set — skipping Slack post."
             exit 0
           fi
-          payload=$(node -e "const fs=require('fs');process.stdout.write(JSON.stringify({text:'*Celo LP alert*\n\n'+fs.readFileSync('status.md','utf8')}))")
-          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
+          # check.mjs writes slack_payload.json (Block Kit) whenever it publishes.
+          # status.md is markdown and Slack renders no tables, so it is not posted raw.
+          if [ ! -f slack_payload.json ]; then
+            echo "no slack_payload.json — nothing to post."
+            exit 0
+          fi
+          code=$(curl -sS -o /tmp/slack.out -w '%{http_code}' -X POST \
+            -H 'Content-type: application/json' --data @slack_payload.json "$SLACK_WEBHOOK_URL")
+          echo "slack responded $code: $(cat /tmp/slack.out)"
+          [ "$code" = "200" ] || { echo "Slack post failed"; exit 1; }
