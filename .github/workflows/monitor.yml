@@ -39,10 +39,15 @@ jobs:
       - name: Pool health check
         run: node pool_health.mjs
 
+      # Publishes at most once a day (the DIGEST_UTC_HOUR digest) plus whenever a
+      # flag appears or clears. Quiet runs leave status.md untouched, so the steps
+      # below see no diff and nothing is committed or posted.
       - name: Run out-of-range check
+        env:
+          DIGEST_UTC_HOUR: "11"
         run: node check.mjs
 
-      - name: Detect changes (range flip and/or allowlist refresh)
+      - name: Detect what to publish
         id: diff
         run: |
           # tvl_history.json does not exist until the first pool-health run, and a
@@ -51,31 +56,33 @@ jobs:
             [ -f "$f" ] || continue
             git add "$f"
           done
-          range=false; allow=false; hist=false
-          git diff --cached --quiet -- state.json || range=true
+          # state.json changes if and only if check.mjs decided to publish, so its
+          # diff is both the commit trigger and the Slack trigger.
+          publish=false; allow=false; hist=false
+          git diff --cached --quiet -- state.json || publish=true
           git diff --cached --quiet -- pools_allowlist.json || allow=true
           git diff --cached --quiet -- tvl_history.json || hist=true
-          echo "range=$range" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
           echo "allow=$allow" >> "$GITHUB_OUTPUT"
           echo "hist=$hist" >> "$GITHUB_OUTPUT"
-          echo "flag change: $range | allowlist changed: $allow | daily TVL sample: $hist"
+          echo "publish: $publish | allowlist changed: $allow | daily TVL sample: $hist"
 
-      - name: Commit back (on flag change, allowlist refresh or daily TVL sample)
-        if: steps.diff.outputs.range == 'true' || steps.diff.outputs.allow == 'true' || steps.diff.outputs.hist == 'true'
+      - name: Commit back (on publish, allowlist refresh or daily TVL sample)
+        if: steps.diff.outputs.publish == 'true' || steps.diff.outputs.allow == 'true' || steps.diff.outputs.hist == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           msg=""
-          [ "${{ steps.diff.outputs.range }}" = "true" ] && msg="LP range change"
+          [ "${{ steps.diff.outputs.publish }}" = "true" ] && msg="status update"
           [ "${{ steps.diff.outputs.allow }}" = "true" ] && msg="${msg:+$msg + }allowlist refresh"
           [ "${{ steps.diff.outputs.hist }}" = "true" ] && msg="${msg:+$msg + }daily TVL sample"
           git commit -m "${msg:-status update} $(date -u +%FT%TZ) [skip ci]"
           git push
 
-      # Only flag changes ping Slack. A daily TVL sample or an allowlist refresh
-      # is bookkeeping, not an event.
-      - name: Slack alert (only on a flag change; no-op if webhook secret unset)
-        if: steps.diff.outputs.range == 'true'
+      # Only a publish pings Slack: the daily digest, or a flag appearing/clearing.
+      # A TVL sample or an allowlist refresh is bookkeeping, not an event.
+      - name: Slack post (daily digest or incident; no-op if webhook secret unset)
+        if: steps.diff.outputs.publish == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |

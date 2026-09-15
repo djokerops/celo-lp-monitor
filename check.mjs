@@ -23,6 +23,11 @@ const POOL_HEALTH_FILE = join(__dir, "pool_health.json");
 const GAP_WIDTH_FLAG = Number(process.env.GAP_WIDTH_FLAG ?? 20);      // worth a human look
 const GAP_WIDTH_URGENT = Number(process.env.GAP_WIDTH_URGENT ?? 100); // a full band out
 
+// The cron runs hourly, but publishing is deliberately rare: one scheduled digest
+// a day, plus an out-of-band update whenever a flag appears or clears. Every other
+// run checks and stays silent, leaving status.md untouched so CI sees no diff.
+const DIGEST_UTC_HOUR = Number(process.env.DIGEST_UTC_HOUR ?? 11);
+
 const log = (file, line) => { try { appendFileSync(file, line + "\n"); } catch {} };
 
 // Pools worth monitoring: those with internal TVL >= threshold, sourced from the
@@ -123,6 +128,12 @@ const FLAG_LABEL = {
 
 function renderStatus(r) {
   const out = [`# Celo LP Range Monitor`, ``, `_Last checked: ${r.checkedAt}_`, ``];
+  // Say why this update exists, so a Slack reader knows whether it is the scheduled
+  // digest or something that just happened.
+  if (r.digest || r.reasons?.length) {
+    const why = r.reasons?.length ? ` — ${r.reasons.join("; ")}` : "";
+    out.push(`_${r.digest ? "Daily digest" : "Incident update"}${why}_`, ``);
+  }
 
   // --- positions ---
   const flagged = r.flaggedPositions || [];
@@ -143,23 +154,33 @@ function renderStatus(r) {
   if (r.recovered.length)
     out.push(``, `**🟢 Back in range this run:** ` + r.recovered.join(", "));
 
-  // --- pool health: flagged pools only ---
+  // --- pool health: every pool, every time ---
+  // The full table is the point of the daily run, so it is listed in full even on a
+  // completely clean day. Flagged pools additionally get a line of detail below it.
   const ph = r.poolHealth;
   const flaggedPools = ph ? ph.pools.filter(p => p.flags.some(f => f.notify)) : [];
-  if (flaggedPools.length) {
-    out.push(``, `## ⚠️ Pool health — ${flaggedPools.length} flagged: ${flaggedPools.map(p => p.pair).join(", ")}`, ``);
+  if (ph) {
+    out.push(``, flaggedPools.length
+      ? `## ⚠️ Pool health — ${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged: ${flaggedPools.map(p => p.pair).join(", ")}`
+      : `## ✅ Pool health — all clear, no flags`, ``);
     out.push(`| Pool | TVL | Price | Balance split | vs. baseline | Status |`, `|------|-----|-------|---------------|--------------|--------|`);
-    for (const p of flaggedPools) {
+    const ordered = [...ph.pools].sort((a, b) =>
+      (a.unavailable ? 1 : 0) - (b.unavailable ? 1 : 0) || (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
+    for (const p of ordered) {
       const star = p.liz ? " ⭑" : "";
+      if (p.unavailable) { out.push(`| ${p.pair}${star} | — | — | — | — | 🚫 data unavailable |`); continue; }
       const split = p.skew ? `${p.skew.basePct.toFixed(0)}% ${p.skew.baseSym} / ${(100 - p.skew.basePct).toFixed(0)}% ${p.skew.quoteSym}` : "—";
       const dev = p.devPct == null ? `baseline building (${p.baselineSamples}d)` : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
-      const status = p.flags.filter(f => f.notify).map(f => FLAG_LABEL[f.type] || f.type).join(", ");
+      const notified = p.flags.filter(f => f.notify);
+      const status = notified.length ? notified.map(f => FLAG_LABEL[f.type] || f.type).join(", ") : "OK";
       out.push(`| ${p.pair}${star} | ${fmtUsd(p.tvlUsd ?? 0)} | ${fmtPrice(p.priceUsd ?? 0)} | ${split} | ${dev} | ${status} |`);
     }
-    out.push(``);
-    for (const p of flaggedPools)
-      for (const f of p.flags.filter(f => f.notify)) out.push(`**${p.pair}** — ${f.detail}`, ``);
-    if (flaggedPools.some(p => p.liz)) out.push(`⭑ = on the daily pool list`, ``);
+    if (flaggedPools.length) {
+      out.push(``);
+      for (const p of flaggedPools)
+        for (const f of p.flags.filter(f => f.notify)) out.push(`**${p.pair}** — ${f.detail}`, ``);
+    }
+    if (ph.pools.some(p => p.liz)) out.push(``, `⭑ = on the daily pool list`);
   }
 
   // --- footer ---
@@ -241,11 +262,13 @@ async function main() {
   // --- transition detection via state file ---
   let prev = new Set();
   let prevPoolFlags = [];
+  let lastDigestDay = null;
   if (existsSync(STATE_FILE)) {
     try {
       const st = JSON.parse(readFileSync(STATE_FILE, "utf8"));
       prev = new Set(st.outOfRange || []);
       prevPoolFlags = st.poolFlags || [];
+      lastDigestDay = st.lastDigestDay ?? null;
     } catch {}
   }
   const newlyOut = flaggedPositions.filter(r => !prev.has(r.key));
@@ -259,11 +282,27 @@ async function main() {
   const newPoolFlags = poolFlags.filter(f => !prevPoolFlags.includes(f));
   const clearedPoolFlags = prevPoolFlags.filter(f => !poolFlags.includes(f));
 
-  // No timestamp here on purpose: this file must change ONLY when something
-  // flag-worthy changes, so CI can use its git-diff as the commit trigger.
+  // --- publish decision ---
+  // Two reasons to speak: the once-a-day digest, or something actually changed.
+  // Not "hour === DIGEST_UTC_HOUR": if that run is missed or cron-job.org is late,
+  // the digest should still go out on the next run rather than be skipped for a day.
+  const today = new Date().toISOString().slice(0, 10);
+  const digestDue = new Date().getUTCHours() >= DIGEST_UTC_HOUR && lastDigestDay !== today;
+  const flagChange = newlyOut.length > 0 || recovered.length > 0 || newPoolFlags.length > 0 || clearedPoolFlags.length > 0;
+  const publish = digestDue || flagChange;
+
+  const reasons = [];
+  if (newlyOut.length) reasons.push(`${newlyOut.length} position(s) newly beyond tolerance`);
+  if (recovered.length) reasons.push(`${recovered.length} position(s) back in range`);
+  if (newPoolFlags.length) reasons.push(`${newPoolFlags.length} new pool flag(s)`);
+  if (clearedPoolFlags.length) reasons.push(`${clearedPoolFlags.length} pool flag(s) cleared`);
+
+  // No timestamp here on purpose: this file must change ONLY when we publish, so
+  // CI can use its git-diff as both the commit and the Slack trigger.
   writeFileSync(STATE_FILE, JSON.stringify({
     outOfRange: [...outKeys].sort(),
     poolFlags,
+    lastDigestDay: digestDue ? today : lastDigestDay,
   }, null, 2));
 
   const report = {
@@ -283,16 +322,21 @@ async function main() {
     poolHealth,
     newPoolFlags,
     clearedPoolFlags,
+    publish,
+    digest: digestDue,
+    reasons,
     errors,
   };
   console.log(JSON.stringify(report, null, 2));
 
-  // --- write status.md (human-readable, regenerated every run) ---
-  writeFileSync(STATUS_MD, renderStatus(report));
+  // --- status.md is rewritten ONLY on a publish ---
+  // Leaving the file untouched on a quiet run is what keeps CI from committing and
+  // Slack from posting: the hourly check happens, but nothing downstream moves.
+  if (publish) writeFileSync(STATUS_MD, renderStatus(report));
 
   // --- delivery: macOS banner + logs, only on transitions ---
   const ts = new Date().toISOString();
-  log(RUN_LOG, `${ts} open=${results.length} out=${outNow.length} flagged=${flaggedPositions.length} marginal=${marginalCount} poolFlags=${poolFlags.length} newlyOut=${newlyOut.length} recovered=${recovered.length} errors=${errors.length}`);
+  log(RUN_LOG, `${ts} publish=${publish}${publish ? `(${reasons.join("; ")})` : ""} open=${results.length} out=${outNow.length} flagged=${flaggedPositions.length} marginal=${marginalCount} poolFlags=${poolFlags.length} newlyOut=${newlyOut.length} recovered=${recovered.length} errors=${errors.length}`);
 
   const lines = [];
   for (const r of newlyOut) lines.push(`🔴 OUT: ${r.label} ${r.pair} (${r.feeTier}) #${r.tokenId} — price ${r.side} range, ${r.gapPct}% out (${r.gapWidthPct}% of its range)`);
