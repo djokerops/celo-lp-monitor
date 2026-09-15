@@ -7,7 +7,9 @@
 // moving money. Every swing is therefore checked against our own delta and marked
 // "explained" when the two move together.
 //
-// Baselines are a rolling median of the last HISTORY_DAYS daily samples, kept in
+// TVL is measured against the previous push (the last daily sample), so the report
+// answers "what moved in the last 24h". Reserve skew still uses a rolling median
+// over HISTORY_DAYS, since a one-day skew reading is noisy. Both live in
 // tvl_history.json. Static baselines go stale within weeks; these don't.
 //
 // Never exits non-zero: a pool-health failure must not take the range monitor
@@ -218,25 +220,26 @@ async function main() {
     // pool-wide TVL is a different measure from our internal share; mixing the two
     // across days would read as a swing when only the data source moved.
     const prior = samples.filter(s => s.day !== today && (s.source ?? "dexscreener") === row.source);
-    const baseTvl = median(prior.map(s => s.tvlUsd).filter(Number.isFinite));
+    // TVL is compared against the last push, not a multi-day median: with a daily
+    // digest the useful question is "what moved since yesterday's report".
+    const last = prior.length ? prior[prior.length - 1] : null;
     const baseSkew = median(prior.map(s => s.skewPct).filter(Number.isFinite));
-    const baseInternal = median(prior.map(s => s.internalUsd).filter(Number.isFinite));
-    const haveBaseline = prior.length >= MIN_BASELINE_N;
-    row.baselineTvl = baseTvl;
-    row.baselineSamples = prior.length;
-    row.devPct = haveBaseline && baseTvl ? ((tvl - baseTvl) / baseTvl) * 100 : null;
+    const haveSkewBaseline = prior.length >= MIN_BASELINE_N;
+    row.lastPushDay = last?.day ?? null;
+    row.lastPushTvl = last?.tvlUsd ?? null;
+    row.devPct = last && last.tvlUsd ? ((tvl - last.tvlUsd) / last.tvlUsd) * 100 : null;
 
     // Pool 2 is tiny and jitters constantly; its only news is the partner coming back.
     if (meta.rule === "redeposit") {
       if (tvl > (meta.redepositAbove ?? 5000))
         row.flags.push({ type: "partner_redeposit", severity: "info", notify: true, detail: `TVL $${tvl.toLocaleString()} above $${(meta.redepositAbove ?? 5000).toLocaleString()} — partner likely redeposited, TVL recovering` });
-    } else if (haveBaseline && baseTvl) {
+    } else if (last && last.tvlUsd) {
       const dev = row.devPct;
       if (Math.abs(dev) > TVL_SWING_PCT) {
         // Did our own liquidity move by roughly the same amount? Then it isn't news.
-        const dPool = tvl - baseTvl;
-        const dInternal = meta.internalUsd - (baseInternal ?? meta.internalUsd);
-        const residualPct = Math.abs((dPool - dInternal) / baseTvl) * 100;
+        const dPool = tvl - last.tvlUsd;
+        const dInternal = meta.internalUsd - (last.internalUsd ?? meta.internalUsd);
+        const residualPct = Math.abs((dPool - dInternal) / last.tvlUsd) * 100;
         const explained = residualPct <= TVL_SWING_PCT;
         row.flags.push({
           type: "tvl_swing",
@@ -244,7 +247,7 @@ async function main() {
           // Our own deposit is not news. Recorded, but it does not raise a flag.
           notify: !explained,
           explained,
-          detail: `TVL $${Math.round(tvl).toLocaleString()} vs $${Math.round(baseTvl).toLocaleString()} baseline (${dev >= 0 ? "+" : ""}${dev.toFixed(1)}%, threshold ±${TVL_SWING_PCT}%)`
+          detail: `TVL $${Math.round(tvl).toLocaleString()} vs $${Math.round(last.tvlUsd).toLocaleString()} at the last push on ${last.day} (${dev >= 0 ? "+" : ""}${dev.toFixed(1)}%, threshold ±${TVL_SWING_PCT}%)`
             + (explained ? ` — our internal TVL moved with it, so this is our own liquidity, not an external event` : ""),
         });
       }
@@ -264,7 +267,7 @@ async function main() {
 
     // Skew: flag movement, not level. Half our pools are structurally one-sided by
     // design, so an absolute threshold fires on them forever.
-    if (meta.rule !== "redeposit" && haveBaseline && baseSkew != null && row.skew) {
+    if (meta.rule !== "redeposit" && haveSkewBaseline && baseSkew != null && row.skew) {
       const delta = basePct - baseSkew;
       if (Math.abs(delta) > SKEW_DELTA_PTS)
         row.flags.push({

@@ -179,13 +179,13 @@ function renderStatus(r) {
     out.push(``, flaggedPools.length
       ? `## ⚠️ Pool health — ${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged: ${flaggedPools.map(p => p.pair).join(", ")}`
       : `## ✅ Pool health — all clear, no flags`, ``);
-    out.push(`| Pool | TVL | Price | Balance split | Range | vs. baseline | Status |`, `|------|-----|-------|---------------|-------|--------------|--------|`);
+    out.push(`| Pool | TVL | Price | Balance split | Range | 24h Δ | Status |`, `|------|-----|-------|---------------|-------|-------|--------|`);
     // A pool nothing can price is dropped rather than shown as an empty row.
     const ordered = [...ph.pools].filter(p => !p.unavailable).sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
     for (const p of ordered) {
       const star = p.liz ? " ⭑" : "";
       const split = p.skew ? `${p.skew.basePct.toFixed(0)}% ${p.skew.baseSym} / ${(100 - p.skew.basePct).toFixed(0)}% ${p.skew.quoteSym}` : "—";
-      const dev = p.devPct == null ? `baseline building (${p.baselineSamples}d)` : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
+      const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
       const notified = p.flags.filter(f => f.notify);
       const status = notified.length ? notified.map(f => FLAG_LABEL[f.type] || f.type).join(", ") : "OK";
       const mark = p.source === "onchain" ? " †" : p.source === "dune-internal" ? " ‡" : "";
