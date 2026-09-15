@@ -113,7 +113,13 @@ async function poolTick(pool) {
 const pct = (ticks) => (Math.pow(1.0001, Math.abs(ticks)) - 1) * 100;
 
 const fmtUsd = (n) => n >= 1 ? `$${Math.round(n).toLocaleString()}` : `$${n.toFixed(4)}`;
-const fmtPrice = (n) => n >= 1 ? `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : `$${n.toPrecision(4)}`;
+// Peg breaks are judged at 0.5%, so a price near $1 must not round to "$1":
+// CELO/USD₮ at 1.0014 and the shallow pool at 1.0043 both did exactly that.
+const fmtPrice = (n) =>
+  n >= 1000 ? `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+  : n >= 10 ? `$${n.toFixed(2)}`
+  : n >= 0.1 ? `$${n.toFixed(4)}`
+  : `$${n.toPrecision(4)}`;
 
 // Render the repo-committed status.md that the reader automation relays.
 // Only flagged items appear: an all-clear run produces a short file, and pools
@@ -125,6 +131,16 @@ const FLAG_LABEL = {
   volatile_swing: "⚠️ volatile swing",
   partner_redeposit: "🟢 partner redeposit",
 };
+
+// Where our own liquidity sits relative to each pool's price, rolled up per pool.
+// Pools we hold nothing in (the pinned ones from the daily list) show no range.
+function rangeCell(r, p) {
+  const rg = r.poolRange?.[String(p.pool).toLowerCase()];
+  if (!rg || !rg.count) return "—";
+  if (rg.anyFlagged) return `out ${rg.worstGapPct}%`;
+  if (rg.anyOut) return "below tolerance";
+  return "in range";
+}
 
 function renderStatus(r) {
   const out = [`# Celo LP Range Monitor`, ``, `_Last checked: ${r.checkedAt}_`, ``];
@@ -163,24 +179,29 @@ function renderStatus(r) {
     out.push(``, flaggedPools.length
       ? `## ⚠️ Pool health — ${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged: ${flaggedPools.map(p => p.pair).join(", ")}`
       : `## ✅ Pool health — all clear, no flags`, ``);
-    out.push(`| Pool | TVL | Price | Balance split | vs. baseline | Status |`, `|------|-----|-------|---------------|--------------|--------|`);
-    const ordered = [...ph.pools].sort((a, b) =>
-      (a.unavailable ? 1 : 0) - (b.unavailable ? 1 : 0) || (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
+    out.push(`| Pool | TVL | Price | Balance split | Range | vs. baseline | Status |`, `|------|-----|-------|---------------|-------|--------------|--------|`);
+    // A pool nothing can price is dropped rather than shown as an empty row.
+    const ordered = [...ph.pools].filter(p => !p.unavailable).sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
     for (const p of ordered) {
       const star = p.liz ? " ⭑" : "";
-      if (p.unavailable) { out.push(`| ${p.pair}${star} | — | — | — | — | 🚫 data unavailable |`); continue; }
       const split = p.skew ? `${p.skew.basePct.toFixed(0)}% ${p.skew.baseSym} / ${(100 - p.skew.basePct).toFixed(0)}% ${p.skew.quoteSym}` : "—";
       const dev = p.devPct == null ? `baseline building (${p.baselineSamples}d)` : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
       const notified = p.flags.filter(f => f.notify);
       const status = notified.length ? notified.map(f => FLAG_LABEL[f.type] || f.type).join(", ") : "OK";
-      out.push(`| ${p.pair}${star} | ${fmtUsd(p.tvlUsd ?? 0)} | ${fmtPrice(p.priceUsd ?? 0)} | ${split} | ${dev} | ${status} |`);
+      const mark = p.source === "onchain" ? " †" : p.source === "dune-internal" ? " ‡" : "";
+      const price = p.priceUsd == null ? "—" : fmtPrice(p.priceUsd);
+      out.push(`| ${p.pair}${star} | ${fmtUsd(p.tvlUsd ?? 0)}${mark} | ${price} | ${split} | ${rangeCell(r, p)} | ${dev} | ${status} |`);
     }
     if (flaggedPools.length) {
       out.push(``);
       for (const p of flaggedPools)
         for (const f of p.flags.filter(f => f.notify)) out.push(`**${p.pair}** — ${f.detail}`, ``);
     }
-    if (ph.pools.some(p => p.liz)) out.push(``, `⭑ = on the daily pool list`);
+    const notes = [];
+    if (ph.pools.some(p => p.liz)) notes.push(`⭑ = on the daily pool list`);
+    if (ph.pools.some(p => p.source === "onchain")) notes.push(`† TVL read from on-chain reserves (Dexscreener does not index this pool)`);
+    if (ph.pools.some(p => p.source === "dune-internal")) notes.push(`‡ our internal TVL from Dune, not pool-wide — no market data available`);
+    if (notes.length) out.push(``, notes.join("  \n"));
   }
 
   // --- footer ---
@@ -192,8 +213,10 @@ function renderStatus(r) {
   out.push(``, `---`, `${r.totalOpenPositions} open positions checked · ${r.errors.length} error(s)${filterNote}`);
   if (ph) {
     const noData = ph.pools.filter(p => p.unavailable);
-    out.push(`Pool health: ${ph.poolsChecked} pools checked, ${flaggedPools.length} flagged`
-      + (noData.length ? ` · no market data for ${noData.map(p => p.pair).join(", ")}` : ""));
+    const fallback = ph.pools.filter(p => p.source === "onchain" || p.source === "dune-internal");
+    out.push(`Pool health: ${ph.poolsChecked - noData.length} pools listed, ${flaggedPools.length} flagged`
+      + (fallback.length ? ` · ${fallback.length} priced without Dexscreener` : "")
+      + (noData.length ? ` · ${noData.length} omitted, unpriceable by any source (${noData.map(p => p.pair).join(", ")})` : ""));
   }
   if (r.errors.length) out.push(``, "```", ...r.errors.slice(0, 5), "```");
   return out.join("\n") + "\n";
@@ -242,6 +265,21 @@ async function main() {
           gapWidthPct: inRange ? 0 : +((pct(gapTicks) / pct(tickUpper - tickLower)) * 100).toFixed(1),
         });
       } catch (e) { errors.push(`${label}#${id}: ${e.message}`); }
+    }
+  }
+
+  // Our position status, rolled up per pool: a pool inherits the worst state of
+  // whichever of our positions sit in it.
+  const poolRange = {};
+  for (const r of results) {
+    const k = String(r.pool).toLowerCase();
+    const cur = poolRange[k] ??= { count: 0, anyOut: false, anyFlagged: false, worstGapPct: 0, worstGapWidthPct: 0 };
+    cur.count++;
+    if (!r.inRange) {
+      cur.anyOut = true;
+      cur.worstGapPct = Math.max(cur.worstGapPct, r.gapPct);
+      cur.worstGapWidthPct = Math.max(cur.worstGapWidthPct, r.gapWidthPct);
+      if (r.gapWidthPct >= GAP_WIDTH_FLAG) cur.anyFlagged = true;
     }
   }
 
@@ -319,6 +357,7 @@ async function main() {
     recovered,
     outOfRange: outNow,
     flaggedPositions,
+    poolRange,
     poolHealth,
     newPoolFlags,
     clearedPoolFlags,
