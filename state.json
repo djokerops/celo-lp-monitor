@@ -1,5 +1,7 @@
 {
-  "outOfRange": [],
+  "outOfRange": [
+    "APF#201522"
+  ],
   "poolFlags": [],
   "lastDigestDay": "2026-09-15"
 }
