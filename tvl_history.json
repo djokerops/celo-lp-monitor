@@ -13,6 +13,13 @@
         "tvlUsd": 779478.27,
         "skewPct": 8.53462478819326,
         "internalUsd": 776367.71
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 792132.67,
+        "skewPct": 8.534575600827068,
+        "internalUsd": 776367.71
       }
     ],
     "0x5dc631ad6c26bea1a59fbf2c2680cf3df43d249f": [
@@ -26,6 +33,13 @@
         "day": "2026-09-15",
         "tvlUsd": 643666.73,
         "skewPct": 65.5052454552063,
+        "internalUsd": 627577.76
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 643594.85,
+        "skewPct": 71.53889974414805,
         "internalUsd": 627577.76
       }
     ],
@@ -41,6 +55,13 @@
         "tvlUsd": 206171.2,
         "skewPct": 50.127641113307774,
         "internalUsd": 195623.32
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 201068.42,
+        "skewPct": 53.744752036943446,
+        "internalUsd": 195623.32
       }
     ],
     "0x57332c214e647063bb4c5a73e5a8b7bba79be1e4": [
@@ -54,6 +75,13 @@
         "day": "2026-09-15",
         "tvlUsd": 216377.98,
         "skewPct": 52.25230318815252,
+        "internalUsd": 182564.98
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 211977.49,
+        "skewPct": 58.667259170301534,
         "internalUsd": 182564.98
       }
     ],
@@ -69,6 +97,13 @@
         "tvlUsd": 193115.33,
         "skewPct": 54.7728590474925,
         "internalUsd": 176112.59
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 194288.58,
+        "skewPct": 54.593293440098236,
+        "internalUsd": 176112.59
       }
     ],
     "0x6519d56eb0a69fc0338657784c783b169b8f7d32": [
@@ -82,6 +117,13 @@
         "day": "2026-09-15",
         "tvlUsd": 180729.98,
         "skewPct": 49.15623180802654,
+        "internalUsd": 168417.12
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 180744.8,
+        "skewPct": 49.103344080382946,
         "internalUsd": 168417.12
       }
     ],
@@ -97,6 +139,13 @@
         "tvlUsd": 187277.85,
         "skewPct": 40.9817001850459,
         "internalUsd": 166613.48
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 187272.16,
+        "skewPct": 23.97367499792815,
+        "internalUsd": 166613.48
       }
     ],
     "0x5d8ef8b839be522b9e3d60a51edb5837cd0b2391": [
@@ -110,6 +159,13 @@
         "day": "2026-09-15",
         "tvlUsd": 109964.17,
         "skewPct": 67.42907253880968,
+        "internalUsd": 109791.68
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 109938.83,
+        "skewPct": 67.44176326453537,
         "internalUsd": 109791.68
       }
     ],
@@ -125,6 +181,13 @@
         "tvlUsd": 106963.5,
         "skewPct": 21.2009704244906,
         "internalUsd": 105964.79
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 106962.25,
+        "skewPct": 21.52179857847044,
+        "internalUsd": 105964.79
       }
     ],
     "0x070d575a713eaf5025462d0865fb0dac4b14bc38": [
@@ -138,6 +201,13 @@
         "day": "2026-09-15",
         "tvlUsd": 105397.07,
         "skewPct": 67.42871742070248,
+        "internalUsd": 105396.75
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 105376.19,
+        "skewPct": 67.53484245349921,
         "internalUsd": 105396.75
       }
     ],
@@ -153,6 +223,13 @@
         "tvlUsd": 100561.25,
         "skewPct": 1.6660117274298003,
         "internalUsd": 99415
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dune-internal",
+        "tvlUsd": 99415,
+        "skewPct": null,
+        "internalUsd": 99415
       }
     ],
     "0x1c8dafd358d308b880f71edb5170b010b106ca60": [
@@ -166,6 +243,13 @@
         "day": "2026-09-15",
         "tvlUsd": 48987.74,
         "skewPct": 91.81174718409137,
+        "internalUsd": 48977.59
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 48988,
+        "skewPct": 91.81125990038377,
         "internalUsd": 48977.59
       }
     ],
@@ -181,6 +265,13 @@
         "tvlUsd": 42495.28,
         "skewPct": 52.39654846373526,
         "internalUsd": 35188.58
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dune-internal",
+        "tvlUsd": 35188.58,
+        "skewPct": null,
+        "internalUsd": 35188.58
       }
     ],
     "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f": [
@@ -194,6 +285,13 @@
         "day": "2026-09-15",
         "tvlUsd": 28374.81,
         "skewPct": 78.78464032005851,
+        "internalUsd": 28444.37
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 28358.32,
+        "skewPct": 79.14455087607448,
         "internalUsd": 28444.37
       }
     ],
@@ -209,6 +307,13 @@
         "tvlUsd": 11530.34,
         "skewPct": 13.900793411122308,
         "internalUsd": 1020.02
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 11528.23,
+        "skewPct": 13.792949377311176,
+        "internalUsd": 1020.02
       }
     ],
     "0xb135ebde27d366b0d62e579bae4118cb991b820e": [
@@ -223,11 +328,25 @@
         "tvlUsd": 940.26,
         "skewPct": 19.938314979899175,
         "internalUsd": 0
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
+        "tvlUsd": 943.82,
+        "skewPct": 20.079787523044644,
+        "internalUsd": 0
       }
     ],
     "0x1e2f87e1f8056fcd39695aaeb63cb475e1dd2318": [
       {
         "day": "2026-09-15",
+        "tvlUsd": 66272.1,
+        "skewPct": 32.10058140152492,
+        "internalUsd": 65565.56
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dexscreener",
         "tvlUsd": 66272.1,
         "skewPct": 32.10058140152492,
         "internalUsd": 65565.56
@@ -240,6 +359,13 @@
         "tvlUsd": 15483.63,
         "skewPct": null,
         "internalUsd": 15483.63
+      },
+      {
+        "day": "2026-09-16",
+        "source": "dune-internal",
+        "tvlUsd": 15483.63,
+        "skewPct": null,
+        "internalUsd": 15483.63
       }
     ],
     "0xae073a816117dcd1cc237fe4cb99f89f8f8bff4f": [
@@ -248,6 +374,13 @@
         "source": "onchain",
         "tvlUsd": 1.427002396704423,
         "skewPct": 50.33553389701863,
+        "internalUsd": 0
+      },
+      {
+        "day": "2026-09-16",
+        "source": "onchain",
+        "tvlUsd": 1.4268536562893477,
+        "skewPct": 50.3402916145795,
         "internalUsd": 0
       }
     ]
