@@ -2,6 +2,8 @@
   "outOfRange": [
     "APF#201522"
   ],
-  "poolFlags": [],
+  "poolFlags": [
+    "wARS/USD₮:tvl_swing"
+  ],
   "lastDigestDay": "2026-09-16"
 }
