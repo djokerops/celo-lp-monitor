@@ -14,3 +14,7 @@
 2026-09-16T19:00:32.522Z 🔴 OUT: APF USD₮/USDC (0.01%) #201522 — price below range, 0.05% out (83.3% of its range)
 2026-09-16T21:00:32.375Z 🔴 OUT: APF USDm/EURm (0.01%) #201506 — price above range, 0.94% out (38.6% of its range)
 2026-09-16T22:00:32.599Z 🟢 BACK IN RANGE: APF#201506
+2026-09-17T00:00:30.136Z ⚠️ POOL: KESm/USD₮:skew_shift
+2026-09-17T00:00:30.136Z ⚠️ POOL: USD₮/GBPm:skew_shift
+2026-09-17T00:00:30.136Z ⚠️ POOL: USD₮/USDC:skew_shift
+2026-09-17T00:00:30.136Z ⚠️ POOL: USD₮/USDm:skew_shift

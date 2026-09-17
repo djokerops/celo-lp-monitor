@@ -20,6 +20,13 @@
         "tvlUsd": 792132.67,
         "skewPct": 8.534575600827068,
         "internalUsd": 776367.71
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 740236.72,
+        "skewPct": 8.53445006078596,
+        "internalUsd": 737355.44
       }
     ],
     "0x5dc631ad6c26bea1a59fbf2c2680cf3df43d249f": [
@@ -41,6 +48,13 @@
         "tvlUsd": 643594.85,
         "skewPct": 71.53889974414805,
         "internalUsd": 627577.76
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 643460.21,
+        "skewPct": 81.07002345957025,
+        "internalUsd": 627324.9
       }
     ],
     "0xf55791afbb35ad42984f18d6fe3e1ff73d81900c": [
@@ -62,6 +76,13 @@
         "tvlUsd": 201068.42,
         "skewPct": 53.744752036943446,
         "internalUsd": 195623.32
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 202092.45,
+        "skewPct": 53.10897385429292,
+        "internalUsd": 191673.31
       }
     ],
     "0x57332c214e647063bb4c5a73e5a8b7bba79be1e4": [
@@ -83,6 +104,13 @@
         "tvlUsd": 211977.49,
         "skewPct": 58.667259170301534,
         "internalUsd": 182564.98
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 212928.44,
+        "skewPct": 58.184839796881995,
+        "internalUsd": 181058.3
       }
     ],
     "0x6cde5f5a192fbf3fd84df983aa6dc30dbd9f8fac": [
@@ -104,6 +132,13 @@
         "tvlUsd": 194288.58,
         "skewPct": 54.593293440098236,
         "internalUsd": 176112.59
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 191446.72,
+        "skewPct": 53.550440561217236,
+        "internalUsd": 171041.4
       }
     ],
     "0x6519d56eb0a69fc0338657784c783b169b8f7d32": [
@@ -125,6 +160,13 @@
         "tvlUsd": 180744.8,
         "skewPct": 49.103344080382946,
         "internalUsd": 168417.12
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dune-internal",
+        "tvlUsd": 168234.58,
+        "skewPct": null,
+        "internalUsd": 168234.58
       }
     ],
     "0x1a810e0b6c2dd5629afa2f0c898b9512c6f78846": [
@@ -146,6 +188,13 @@
         "tvlUsd": 187272.16,
         "skewPct": 23.97367499792815,
         "internalUsd": 166613.48
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 187239.06,
+        "skewPct": 17.693256310942814,
+        "internalUsd": 166549.13
       }
     ],
     "0x5d8ef8b839be522b9e3d60a51edb5837cd0b2391": [
@@ -167,6 +216,13 @@
         "tvlUsd": 109938.83,
         "skewPct": 67.44176326453537,
         "internalUsd": 109791.68
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 109126.98,
+        "skewPct": 67.97683744707312,
+        "internalUsd": 109960.56
       }
     ],
     "0xb1ea2e17c8abcfa5ba111c92a9a1ad8c5728153f": [
@@ -188,6 +244,13 @@
         "tvlUsd": 106962.25,
         "skewPct": 21.52179857847044,
         "internalUsd": 105964.79
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 106720.61,
+        "skewPct": 36.594899523156776,
+        "internalUsd": 105903.16
       }
     ],
     "0x070d575a713eaf5025462d0865fb0dac4b14bc38": [
@@ -209,6 +272,13 @@
         "tvlUsd": 105376.19,
         "skewPct": 67.53484245349921,
         "internalUsd": 105396.75
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 105340.87,
+        "skewPct": 68.44230107459717,
+        "internalUsd": 105339.2
       }
     ],
     "0x59abe068150be95582479a405f2734cb533f9354": [
@@ -230,6 +300,13 @@
         "tvlUsd": 99415,
         "skewPct": null,
         "internalUsd": 99415
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dune-internal",
+        "tvlUsd": 99369.3,
+        "skewPct": null,
+        "internalUsd": 99369.3
       }
     ],
     "0x1c8dafd358d308b880f71edb5170b010b106ca60": [
@@ -251,6 +328,13 @@
         "tvlUsd": 48988,
         "skewPct": 91.81125990038377,
         "internalUsd": 48977.59
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 48902.44,
+        "skewPct": 99.52765138099447,
+        "internalUsd": 48820.43
       }
     ],
     "0x87dec9a2589d9e6511df84c193561b3a16cf6238": [
@@ -272,6 +356,13 @@
         "tvlUsd": 35188.58,
         "skewPct": null,
         "internalUsd": 35188.58
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 42480.24,
+        "skewPct": 52.41386103280019,
+        "internalUsd": 35179.26
       }
     ],
     "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f": [
@@ -293,6 +384,13 @@
         "tvlUsd": 28358.32,
         "skewPct": 79.14455087607448,
         "internalUsd": 28444.37
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dune-internal",
+        "tvlUsd": 28375.74,
+        "skewPct": null,
+        "internalUsd": 28375.74
       }
     ],
     "0x61ef8708fc240dc7f9f2c0d81c3124df2fd8829f": [
@@ -314,6 +412,13 @@
         "tvlUsd": 11528.23,
         "skewPct": 13.792949377311176,
         "internalUsd": 1020.02
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 11522.69,
+        "skewPct": 45.88728536478895,
+        "internalUsd": 1019.1
       }
     ],
     "0xb135ebde27d366b0d62e579bae4118cb991b820e": [
@@ -335,6 +440,13 @@
         "tvlUsd": 943.82,
         "skewPct": 20.079787523044644,
         "internalUsd": 0
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 920.27,
+        "skewPct": 19.518481287013596,
+        "internalUsd": 0
       }
     ],
     "0x1e2f87e1f8056fcd39695aaeb63cb475e1dd2318": [
@@ -350,6 +462,13 @@
         "tvlUsd": 66272.1,
         "skewPct": 32.10058140152492,
         "internalUsd": 65565.56
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dexscreener",
+        "tvlUsd": 66246.29,
+        "skewPct": 32.10023692058831,
+        "internalUsd": 65610.41
       }
     ],
     "0x14e577e42d45fd2200a9b0e31d87fe826467111a": [
@@ -366,6 +485,13 @@
         "tvlUsd": 15483.63,
         "skewPct": null,
         "internalUsd": 15483.63
+      },
+      {
+        "day": "2026-09-17",
+        "source": "dune-internal",
+        "tvlUsd": 15449.34,
+        "skewPct": null,
+        "internalUsd": 15449.34
       }
     ],
     "0xae073a816117dcd1cc237fe4cb99f89f8f8bff4f": [
@@ -381,6 +507,13 @@
         "source": "onchain",
         "tvlUsd": 1.4268536562893477,
         "skewPct": 50.3402916145795,
+        "internalUsd": 0
+      },
+      {
+        "day": "2026-09-17",
+        "source": "onchain",
+        "tvlUsd": 1.4262946331070439,
+        "skewPct": 50.3357361685566,
         "internalUsd": 0
       }
     ]
