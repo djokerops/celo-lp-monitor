@@ -177,8 +177,10 @@ function renderSlack(r) {
   const detail = [];
   for (const p of flaggedPools)
     for (const f of p.flags.filter(f => f.notify)) {
-      detail.push(`• *${p.pair}*: ${f.detail}${f.positions?.length ? " -- pool:" : ""}`);
-      if (f.positions?.length) detail.push(`    \`${f.pool}\` · out of range: ${f.positions.join(", ")}`);
+      // Slack names the positions but not the pool address: a 42-character hex
+      // string wraps badly on a phone and nobody pastes it out of a notification.
+      detail.push(`• *${p.pair}*: ${f.detail}`);
+      if (f.positions?.length) detail.push(`    out of range: ${f.positions.join(", ")}`);
     }
 
   // fixed-width table: pool / TVL / 24h / range. Status lives in the lines above.
