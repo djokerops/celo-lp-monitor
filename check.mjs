@@ -212,7 +212,9 @@ function renderSlack(r) {
   const body = rows.map(cell);
   const head4 = ["POOL", "TVL", "Internal", "Split", "RANGE"];
   const w = head4.map((h, i) => Math.max(h.length, ...body.map(b => b[i].length)));
-  const fmtRow = (c) => c.map((v, i) => i === 0 ? v.padEnd(w[i]) : v.padStart(w[i])).join("  ");
+  // Every column left-aligned. Right-aligning the numeric ones left the values
+  // ragged against their headers and read as centred.
+  const fmtRow = (c) => c.map((v, i) => v.padEnd(w[i])).join("  ").trimEnd();
   const table = ["```", fmtRow(head4), ...body.map(fmtRow), "```"].join("\n");
 
   const blocks = [
