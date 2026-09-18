@@ -399,7 +399,10 @@ async function main() {
   // Not "hour === DIGEST_UTC_HOUR": if that run is missed or cron-job.org is late,
   // the digest should still go out on the next run rather than be skipped for a day.
   const today = new Date().toISOString().slice(0, 10);
-  const digestDue = new Date().getUTCHours() >= DIGEST_UTC_HOUR && lastDigestDay !== today;
+  // FORCE_DIGEST publishes regardless of the hour or whether today's digest already
+  // went out -- for firing one on demand without waiting for the window.
+  const digestDue = process.env.FORCE_DIGEST === "1"
+    || (new Date().getUTCHours() >= DIGEST_UTC_HOUR && lastDigestDay !== today);
   const flagChange = newPoolFlags.length > 0 || clearedPoolFlags.length > 0;
   const publish = digestDue || flagChange;
 
@@ -409,10 +412,13 @@ async function main() {
 
   // No timestamp here on purpose: this file must change ONLY when we publish, so
   // CI can use its git-diff as both the commit and the Slack trigger.
-  writeFileSync(STATE_FILE, JSON.stringify({
-    poolFlags,
-    lastDigestDay: digestDue ? today : lastDigestDay,
-  }, null, 2));
+  // Omit lastDigestDay entirely when there isn't one. Writing an explicit null
+  // differs from the key being absent, which shows up as a file change and makes
+  // the workflow think we published when check.mjs decided not to.
+  const nextDigestDay = digestDue ? today : lastDigestDay;
+  writeFileSync(STATE_FILE, JSON.stringify(
+    nextDigestDay ? { poolFlags, lastDigestDay: nextDigestDay } : { poolFlags },
+    null, 2));
 
   const report = {
     checkedAt: new Date().toISOString(),

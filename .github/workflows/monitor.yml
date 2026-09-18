@@ -5,7 +5,12 @@ on:
   # workflow_dispatch API hourly. GitHub's own `schedule:` trigger is
   # deliberately absent: it is delayed under load and auto-disabled after
   # 60 days of repo inactivity.
-  workflow_dispatch: {}    # external trigger + manual "Run workflow"
+  workflow_dispatch:       # external trigger + manual "Run workflow"
+    inputs:
+      force_digest:
+        description: "Publish a digest now, ignoring the once-a-day gate"
+        type: boolean
+        default: false
 
 permissions:
   contents: write          # needed to commit status.md/state.json back
@@ -47,6 +52,7 @@ jobs:
       - name: Run out-of-range check
         env:
           DIGEST_UTC_HOUR: "11"
+          FORCE_DIGEST: ${{ github.event.inputs.force_digest == 'true' && '1' || '0' }}
         run: node check.mjs
 
       - name: Detect what to publish
