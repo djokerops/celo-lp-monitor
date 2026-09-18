@@ -55,7 +55,14 @@ jobs:
           FORCE_DIGEST: ${{ github.event.inputs.force_digest == 'true' && '1' || '0' }}
         run: node check.mjs
 
-      - name: Detect what to publish
+      # check.mjs is the authority on whether we published; CI must not re-derive it.
+      - name: Read the publish decision
+        id: sig
+        run: |
+          node -e 'const s=require("./run_signal.json");console.log("publish="+s.publish);console.log("reasons="+(s.reasons||[]).join("; "))' >> "$GITHUB_OUTPUT"
+          node -e 'const s=require("./run_signal.json");console.log(`publish=${s.publish} digest=${s.digest} reasons=${(s.reasons||[]).join("; ")||"none"}`)'
+
+      - name: Detect what to commit
         id: diff
         run: |
           # tvl_history.json does not exist until the first pool-health run, and a
@@ -66,22 +73,23 @@ jobs:
           done
           # state.json changes if and only if check.mjs decided to publish, so its
           # diff is both the commit trigger and the Slack trigger.
-          publish=false; allow=false; hist=false
-          git diff --cached --quiet -- state.json || publish=true
+          changed=false; allow=false; hist=false
+          # status.md is only ever rewritten on a publish, so its diff belongs here
+          git diff --cached --quiet -- state.json status.md alerts.log || changed=true
           git diff --cached --quiet -- pools_allowlist.json || allow=true
           git diff --cached --quiet -- tvl_history.json || hist=true
-          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
           echo "allow=$allow" >> "$GITHUB_OUTPUT"
           echo "hist=$hist" >> "$GITHUB_OUTPUT"
-          echo "publish: $publish | allowlist changed: $allow | daily TVL sample: $hist"
+          echo "report changed: $changed | allowlist changed: $allow | daily TVL sample: $hist"
 
       - name: Commit back (on publish, allowlist refresh or daily TVL sample)
-        if: steps.diff.outputs.publish == 'true' || steps.diff.outputs.allow == 'true' || steps.diff.outputs.hist == 'true'
+        if: steps.diff.outputs.changed == 'true' || steps.diff.outputs.allow == 'true' || steps.diff.outputs.hist == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           msg=""
-          [ "${{ steps.diff.outputs.publish }}" = "true" ] && msg="status update"
+          [ "${{ steps.diff.outputs.changed }}" = "true" ] && msg="status update"
           [ "${{ steps.diff.outputs.allow }}" = "true" ] && msg="${msg:+$msg + }allowlist refresh"
           [ "${{ steps.diff.outputs.hist }}" = "true" ] && msg="${msg:+$msg + }daily TVL sample"
           git commit -m "${msg:-status update} $(date -u +%FT%TZ) [skip ci]"
@@ -90,7 +98,7 @@ jobs:
       # Only a publish pings Slack: the daily digest, or a flag appearing/clearing.
       # A TVL sample or an allowlist refresh is bookkeeping, not an event.
       - name: Slack post (daily digest or incident; no-op if webhook secret unset)
-        if: steps.diff.outputs.publish == 'true'
+        if: steps.sig.outputs.publish == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |

@@ -16,6 +16,7 @@ const RUN_LOG = join(__dir, "run.log");
 const ALLOWLIST_FILE = join(__dir, "pools_allowlist.json");
 const POOL_HEALTH_FILE = join(__dir, "pool_health.json");
 const SLACK_PAYLOAD = join(__dir, "slack_payload.json");
+const RUN_SIGNAL = join(__dir, "run_signal.json");
 
 // A position's distance past its range edge only means something relative to how
 // wide that range is: our ranges span 0.06% to 422%, so a fixed % is simultaneously
@@ -465,6 +466,11 @@ async function main() {
     writeFileSync(STATUS_MD, renderStatus(report));
     writeFileSync(SLACK_PAYLOAD, JSON.stringify(renderSlack(report), null, 2) + "\n");
   }
+
+  // Report the decision rather than leaving CI to infer it from a file diff. A
+  // forced digest rewrites state.json with identical content, so the diff is empty
+  // and any diff-based gate concludes we published nothing.
+  writeFileSync(RUN_SIGNAL, JSON.stringify({ publish, digest: digestDue, reasons }, null, 2) + "\n");
 
   // --- delivery: macOS banner + logs, only on transitions ---
   const ts = new Date().toISOString();

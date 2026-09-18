@@ -5,3 +5,4 @@ launchd.err
 launchd_test.err
 pool_health.json
 slack_payload.json
+run_signal.json
