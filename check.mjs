@@ -177,8 +177,8 @@ function renderSlack(r) {
   const detail = [];
   for (const p of flaggedPools)
     for (const f of p.flags.filter(f => f.notify)) {
-      detail.push(`• *${p.pair}* — ${f.detail}`);
-      if (f.positions?.length) detail.push(`    \`${f.pool}\`  ${f.positions.join(", ")}`);
+      detail.push(`• *${p.pair}*: ${f.detail}${f.positions?.length ? " -- pool:" : ""}`);
+      if (f.positions?.length) detail.push(`    \`${f.pool}\` · out of range: ${f.positions.join(", ")}`);
     }
 
   // fixed-width table: pool / TVL / 24h / range. Status lives in the lines above.
@@ -250,7 +250,7 @@ function renderStatus(r) {
       out.push(``);
       for (const p of flaggedPools)
         for (const f of p.flags.filter(f => f.notify)) {
-          out.push(`**${p.pair}** — ${f.detail}`);
+          out.push(`**${p.pair}**: ${f.detail}${f.positions?.length ? " -- pool:" : ""}`);
           // Enough to act on without opening anything else: which pool, whose
           // position, and which tokenId.
           if (f.positions?.length) out.push(`\`${f.pool}\` · out of range: ${f.positions.join(", ")}`);
@@ -367,10 +367,10 @@ async function main() {
         pool: (() => { try { return ethers.getAddress(p.pool); } catch { return p.pool; } })(),
         positions: rg.out.map(o => `${o.label} #${o.tokenId}`),
         detail: rg.count === 1
-          ? `our only position here is out of range — earning no fees`
+          ? `our only position here is out of range(earning no fees)`
           : rg.outCount === rg.count
-            ? `all ${rg.count} of our positions here are out of range — earning no fees`
-            : `${rg.outCount} of our ${rg.count} positions here ${rg.outCount === 1 ? "is" : "are"} out of range — earning no fees`,
+            ? `all ${rg.count} of our positions here are out of range(earning no fees)`
+            : `${rg.outCount} of our ${rg.count} positions here ${rg.outCount === 1 ? "is" : "are"} out of range(earning no fees)`,
       });
     }
   }
