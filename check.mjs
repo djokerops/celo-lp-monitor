@@ -168,7 +168,7 @@ function renderSlack(r) {
 
   const lines = [];
   lines.push(outCount
-    ? `${r.totalOpenPositions} positions · *${outCount} out of range* _(earning nothing)_`
+    ? `${r.totalOpenPositions} positions · *${outCount} out of range*`
     : `*All ${r.totalOpenPositions} positions in range*`);
   lines.push(flaggedPools.length
     ? `*${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged* — ${flaggedPools.map(p => p.pair).join(", ")}`
@@ -188,16 +188,18 @@ function renderSlack(r) {
     .sort((a, b) => (b.tvlUsd ?? b.internalUsd ?? 0) - (a.tvlUsd ?? a.internalUsd ?? 0)) : [];
   const cell = (p) => {
     const rg = r.poolRange?.[String(p.pool).toLowerCase()];
-    const range = !rg || !rg.count ? "—" : !rg.outCount ? "in range" : rg.outCount === rg.count ? "OUT" : `${rg.outCount}/${rg.count} out`;
+    // Just OUT or IN. How many, and every other flag, is spelled out above.
+    const range = !rg || !rg.count ? "—" : rg.outCount ? "OUT" : "IN";
     const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
-    const flag = p.flags.filter(f => f.notify).map(f => SHORT_FLAG[f.type] || f.type).join(",");
+    const base = p.skew ? Math.round(p.skew.basePct) : null;
+    const split = base == null ? "—" : `${base}% ${p.skew.baseSym}/${100 - base}% ${p.skew.quoteSym}`;
     return [p.pair.slice(0, 21),
             p.tvlUsd == null ? "—" : shortUsd(p.tvlUsd),
             p.internalUsd ? shortUsd(p.internalUsd) : "—",
-            dev, flag || range];
+            split, dev, range];
   };
   const body = rows.map(cell);
-  const head4 = ["POOL", "TVL", "OURS", "24H", "RANGE"];
+  const head4 = ["POOL", "TVL", "Internal", "Split", "24H", "RANGE"];
   const w = head4.map((h, i) => Math.max(h.length, ...body.map(b => b[i].length)));
   const fmtRow = (c) => c.map((v, i) => i === 0 ? v.padEnd(w[i]) : v.padStart(w[i])).join("  ");
   const table = ["```", fmtRow(head4), ...body.map(fmtRow), "```"].join("\n");
