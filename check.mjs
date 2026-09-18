@@ -368,7 +368,9 @@ async function main() {
         type: "out_of_range", severity: "warn", notify: true,
         // checksummed so the address can be pasted straight into an explorer
         pool: (() => { try { return ethers.getAddress(p.pool); } catch { return p.pool; } })(),
-        positions: rg.out.map(o => `${o.label} #${o.tokenId}`),
+        // No "#" before the id: Slack reads #198286 as a hex colour and renders a
+        // colour chip instead of the number.
+        positions: rg.out.map(o => `${o.label} positionNFT ${o.tokenId}`),
         detail: rg.count === 1
           ? `our only position here is out of range(earning no fees)`
           : rg.outCount === rg.count
