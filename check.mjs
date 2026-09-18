@@ -203,8 +203,8 @@ function renderSlack(r) {
     const rg = r.poolRange?.[String(p.pool).toLowerCase()];
     // Just OUT or IN. How many, and every other flag, is spelled out above.
     const range = !rg || !rg.count ? "—" : rg.outCount ? "OUT" : "IN";
-    const base = p.skew ? Math.round(p.skew.basePct) : null;
-    const split = base == null ? "—" : `${base}% ${p.skew.baseSym}/${100 - base}% ${p.skew.quoteSym}`;
+    const base = p.skew ? p.skew.basePct : null;
+    const split = base == null ? "—" : `${base.toFixed(2)}% ${p.skew.baseSym}/${(100 - base).toFixed(2)}% ${p.skew.quoteSym}`;
     return [p.pair.slice(0, 21),
             p.tvlUsd == null ? "—" : shortUsd(p.tvlUsd),
             p.internalUsd ? shortUsd(p.internalUsd) : "—",
@@ -256,7 +256,10 @@ function renderStatus(r) {
     // A pool nothing can price is dropped rather than shown as an empty row.
     const ordered = [...ph.pools].filter(p => !p.unavailable).sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
     for (const p of ordered) {
-      const split = p.skew ? `${p.skew.basePct.toFixed(0)}% ${p.skew.baseSym} / ${(100 - p.skew.basePct).toFixed(0)}% ${p.skew.quoteSym}` : "—";
+      // Two decimals, not rounded: a position parked on its band edge reads
+      // "0% / 100%" when it is really 0.42% / 99.58%, and that difference is the
+      // difference between acting and not.
+      const split = p.skew ? `${p.skew.basePct.toFixed(2)}% ${p.skew.baseSym} / ${(100 - p.skew.basePct).toFixed(2)}% ${p.skew.quoteSym}` : "—";
       const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
       const notified = p.flags.filter(f => f.notify);
       const status = notified.length ? notified.map(f => FLAG_LABEL[f.type] || f.type).join(", ") : "OK";
