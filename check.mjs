@@ -21,8 +21,6 @@ const SLACK_PAYLOAD = join(__dir, "slack_payload.json");
 // wide that range is: our ranges span 0.06% to 422%, so a fixed % is simultaneously
 // too tight for one and too loose for another. Both thresholds are fractions of the
 // position's own width.
-const GAP_WIDTH_FLAG = Number(process.env.GAP_WIDTH_FLAG ?? 20);      // worth a human look
-const GAP_WIDTH_URGENT = Number(process.env.GAP_WIDTH_URGENT ?? 100); // a full band out
 
 // The cron runs hourly, but publishing is deliberately rare: one scheduled digest
 // a day, plus an out-of-band update whenever a flag appears or clears. Every other
@@ -138,9 +136,9 @@ const FLAG_LABEL = {
 function rangeCell(r, p) {
   const rg = r.poolRange?.[String(p.pool).toLowerCase()];
   if (!rg || !rg.count) return "—";
-  if (rg.anyFlagged) return `out ${rg.worstGapPct}%`;
-  if (rg.anyOut) return "below tolerance";
-  return "in range";
+  if (!rg.outCount) return "in range";
+  if (rg.outCount === rg.count) return "out of range";
+  return `${rg.outCount} of ${rg.count} out`;
 }
 
 // Slack renders no tables at all -- pipes come through literally -- so the table
@@ -159,19 +157,17 @@ const SHORT_FLAG = {
 function renderSlack(r) {
   const ph = r.poolHealth;
   const flaggedPools = ph ? ph.pools.filter(p => p.flags.some(f => f.notify)) : [];
-  const posFlagged = r.flaggedPositions || [];
-  const clean = posFlagged.length === 0 && flaggedPools.length === 0;
+  const outCount = Object.values(r.poolRange || {}).reduce((n, g) => n + g.outCount, 0);
+  const clean = flaggedPools.length === 0;
 
   const head = r.digest
     ? `${clean ? "🟢" : "🔴"} Celo LP — daily digest`
     : `🔴 Celo LP — incident update`;
 
   const lines = [];
-  lines.push(posFlagged.length
-    ? `*${posFlagged.length} position${posFlagged.length > 1 ? "s" : ""} beyond tolerance* — `
-      + posFlagged.map(p => `${p.label} ${p.pair} (${p.gapPct}%, ${p.gapWidthPct}% of range)`).join(", ")
-    : `*All ${r.totalOpenPositions} positions within tolerance*`
-      + (r.marginalCount ? ` _(${r.marginalCount} marginally out, under the ${r.thresholds.gapWidthFlagPct}% bar)_` : ""));
+  lines.push(outCount
+    ? `${r.totalOpenPositions} positions · *${outCount} out of range* _(earning nothing)_`
+    : `*All ${r.totalOpenPositions} positions in range*`);
   lines.push(flaggedPools.length
     ? `*${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged* — ${flaggedPools.map(p => p.pair).join(", ")}`
     : `*All clear — no pool flags*`);
@@ -181,19 +177,23 @@ function renderSlack(r) {
     for (const f of p.flags.filter(f => f.notify)) detail.push(`• *${p.pair}* — ${f.detail}`);
 
   // fixed-width table: pool / TVL / 24h / range. Status lives in the lines above.
-  const rows = ph ? [...ph.pools].filter(p => !p.unavailable).sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0)) : [];
+  const rows = ph ? [...ph.pools].filter(p => !p.unavailable)
+    .sort((a, b) => (b.tvlUsd ?? b.internalUsd ?? 0) - (a.tvlUsd ?? a.internalUsd ?? 0)) : [];
   const cell = (p) => {
-    const mark = p.source === "onchain" ? "†" : p.source === "dune-internal" ? "‡" : " ";
+    const mark = p.source === "onchain" ? "†" : " ";
     const rg = r.poolRange?.[String(p.pool).toLowerCase()];
-    const range = !rg || !rg.count ? "—" : rg.anyFlagged ? `out ${rg.worstGapPct}%` : rg.anyOut ? "below tol" : "in range";
+    const range = !rg || !rg.count ? "—" : !rg.outCount ? "in range" : rg.outCount === rg.count ? "OUT" : `${rg.outCount}/${rg.count} out`;
     const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
     const flag = p.flags.filter(f => f.notify).map(f => SHORT_FLAG[f.type] || f.type).join(",");
     // plain ASCII star inside the code block: ⭑ is double-width in some monospace
     // fonts, which would shear the column alignment.
-    return [(p.pair + (p.liz ? " *" : "")).slice(0, 21), shortUsd(p.tvlUsd ?? 0) + mark, dev, flag || range];
+    return [(p.pair + (p.liz ? " *" : "")).slice(0, 21),
+            p.tvlUsd == null ? "—" : shortUsd(p.tvlUsd) + mark,
+            p.internalUsd ? shortUsd(p.internalUsd) : "—",
+            dev, flag || range];
   };
   const body = rows.map(cell);
-  const head4 = ["POOL", "TVL", "24H", "RANGE"];
+  const head4 = ["POOL", "TVL", "OURS", "24H", "RANGE"];
   const w = head4.map((h, i) => Math.max(h.length, ...body.map(b => b[i].length)));
   const fmtRow = (c) => c.map((v, i) => i === 0 ? v.padEnd(w[i]) : v.padStart(w[i])).join("  ");
   const table = ["```", fmtRow(head4), ...body.map(fmtRow), "```"].join("\n");
@@ -208,7 +208,7 @@ function renderSlack(r) {
     `${r.checkedAt} · * daily list · † on-chain · ‡ internal only · <https://github.com/djokerops/celo-lp-monitor/blob/main/status.md|full report>` }] });
 
   // text is the notification preview and the fallback where blocks cannot render
-  return { text: `${head} — ${posFlagged.length} position(s), ${flaggedPools.length} pool(s) flagged`, blocks };
+  return { text: `${head} — ${outCount} position(s) out of range, ${flaggedPools.length} pool(s) flagged`, blocks };
 }
 
 function renderStatus(r) {
@@ -220,35 +220,18 @@ function renderStatus(r) {
     out.push(`_${r.digest ? "Daily digest" : "Incident update"}${why}_`, ``);
   }
 
-  // --- positions ---
-  const flagged = r.flaggedPositions || [];
-  if (flagged.length === 0) {
-    out.push(`## ✅ All ${r.totalOpenPositions} positions within tolerance`);
-    if (r.marginalCount)
-      out.push(``, `_${r.marginalCount} position${r.marginalCount > 1 ? "s sit" : " sits"} just outside range but under the ${r.thresholds.gapWidthFlagPct}%-of-range tolerance._`);
-  } else {
-    out.push(`## 🔴 ${flagged.length} position${flagged.length > 1 ? "s" : ""} beyond tolerance`, ``);
-    out.push(`| LP | Pair | Fee | Side | % out | % of range | tokenId |`, `|----|------|-----|------|-------|------------|---------|`);
-    for (const p of flagged) {
-      const urgent = p.gapWidthPct >= r.thresholds.gapWidthUrgentPct ? " 🔺" : "";
-      out.push(`| ${p.label} | ${p.pair} | ${p.feeTier} | ${p.side} | ${p.gapPct}% | ${p.gapWidthPct}%${urgent} | ${p.tokenId} |`);
-    }
-  }
-  if (r.newlyOutOfRange.length)
-    out.push(``, `**⚠️ Newly out this run:** ` + r.newlyOutOfRange.map(p => `${p.label} ${p.pair}`).join(", "));
-  if (r.recovered.length)
-    out.push(``, `**🟢 Back in range this run:** ` + r.recovered.join(", "));
-
   // --- pool health: every pool, every time ---
   // The full table is the point of the daily run, so it is listed in full even on a
   // completely clean day. Flagged pools additionally get a line of detail below it.
   const ph = r.poolHealth;
   const flaggedPools = ph ? ph.pools.filter(p => p.flags.some(f => f.notify)) : [];
   if (ph) {
+    while (out.length && out[out.length - 1] === "") out.pop();
     out.push(``, flaggedPools.length
       ? `## ⚠️ Pool health — ${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged: ${flaggedPools.map(p => p.pair).join(", ")}`
       : `## ✅ Pool health — all clear, no flags`, ``);
-    out.push(`| Pool | TVL | Price | Balance split | Range | 24h Δ | Status |`, `|------|-----|-------|---------------|-------|-------|--------|`);
+    out.push(`| Pool | TVL | Internal | Price | Balance split | Range | 24h Δ | Status |`,
+             `|------|-----|----------|-------|---------------|-------|-------|--------|`);
     // A pool nothing can price is dropped rather than shown as an empty row.
     const ordered = [...ph.pools].filter(p => !p.unavailable).sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
     for (const p of ordered) {
@@ -257,9 +240,11 @@ function renderStatus(r) {
       const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
       const notified = p.flags.filter(f => f.notify);
       const status = notified.length ? notified.map(f => FLAG_LABEL[f.type] || f.type).join(", ") : "OK";
-      const mark = p.source === "onchain" ? " †" : p.source === "dune-internal" ? " ‡" : "";
+      const mark = p.source === "onchain" ? " †" : "";
       const price = p.priceUsd == null ? "—" : fmtPrice(p.priceUsd);
-      out.push(`| ${p.pair}${star} | ${fmtUsd(p.tvlUsd ?? 0)}${mark} | ${price} | ${split} | ${rangeCell(r, p)} | ${dev} | ${status} |`);
+      const tvl = p.tvlUsd == null ? "—" : fmtUsd(p.tvlUsd) + mark;
+      const internal = p.internalUsd ? fmtUsd(p.internalUsd) : "—";
+      out.push(`| ${p.pair}${star} | ${tvl} | ${internal} | ${price} | ${split} | ${rangeCell(r, p)} | ${dev} | ${status} |`);
     }
     if (flaggedPools.length) {
       out.push(``);
@@ -269,7 +254,7 @@ function renderStatus(r) {
     const notes = [];
     if (ph.pools.some(p => p.liz)) notes.push(`⭑ = on the daily pool list`);
     if (ph.pools.some(p => p.source === "onchain")) notes.push(`† TVL read from on-chain reserves (Dexscreener does not index this pool)`);
-    if (ph.pools.some(p => p.source === "dune-internal")) notes.push(`‡ our internal TVL from Dune, not pool-wide — no market data available`);
+    if (ph.pools.some(p => p.source === "internal-only")) notes.push(`TVL "—" = pool-wide figure unavailable; the Internal column is still exact`);
     if (notes.length) out.push(``, notes.join("  \n"));
   }
 
@@ -279,12 +264,13 @@ function renderStatus(r) {
   const filterNote = f.thresholdUsd
     ? ` · pools ≥ $${f.thresholdUsd.toLocaleString()} (${f.poolsTracked} tracked, ${f.positionsSkippedAsDust} dust skipped)`
     : "";
-  out.push(``, `---`, `${r.totalOpenPositions} open positions checked · ${r.errors.length} error(s)${filterNote}`);
+  const outCount = Object.values(r.poolRange || {}).reduce((n, g) => n + g.outCount, 0);
+  out.push(``, `---`, `${r.totalOpenPositions} open positions checked · ${outCount} out of range · ${r.errors.length} error(s)${filterNote}`);
   if (ph) {
     const noData = ph.pools.filter(p => p.unavailable);
-    const fallback = ph.pools.filter(p => p.source === "onchain" || p.source === "dune-internal");
+    const fallback = ph.pools.filter(p => p.source === "onchain");
     out.push(`Pool health: ${ph.poolsChecked - noData.length} pools listed, ${flaggedPools.length} flagged`
-      + (fallback.length ? ` · ${fallback.length} priced without Dexscreener` : "")
+      + (fallback.length ? ` · ${fallback.length} priced on-chain` : "")
       + (noData.length ? ` · ${noData.length} omitted, unpriceable by any source (${noData.map(p => p.pair).join(", ")})` : ""));
   }
   if (r.errors.length) out.push(``, "```", ...r.errors.slice(0, 5), "```");
@@ -342,23 +328,14 @@ async function main() {
   const poolRange = {};
   for (const r of results) {
     const k = String(r.pool).toLowerCase();
-    const cur = poolRange[k] ??= { count: 0, anyOut: false, anyFlagged: false, worstGapPct: 0, worstGapWidthPct: 0 };
+    const cur = poolRange[k] ??= { count: 0, outCount: 0 };
     cur.count++;
-    if (!r.inRange) {
-      cur.anyOut = true;
-      cur.worstGapPct = Math.max(cur.worstGapPct, r.gapPct);
-      cur.worstGapWidthPct = Math.max(cur.worstGapWidthPct, r.gapWidthPct);
-      if (r.gapWidthPct >= GAP_WIDTH_FLAG) cur.anyFlagged = true;
-    }
+    // Binary on purpose. A v3 position earns nothing the moment price leaves the
+    // band, at any distance, so how far out it is carries no economic information.
+    if (!r.inRange) cur.outCount++;
   }
 
   const outNow = results.filter(r => !r.inRange);
-  // Only positions past GAP_WIDTH_FLAG are events. A position loitering a fraction
-  // of a percent outside a wide band is noise: #200153 sat 0.26% out for three days
-  // and came back on its own without anyone touching it.
-  const flaggedPositions = outNow.filter(r => r.gapWidthPct >= GAP_WIDTH_FLAG);
-  const outKeys = new Set(flaggedPositions.map(r => r.key));
-  const marginalCount = outNow.length - flaggedPositions.length;
 
   // --- pool health, produced by pool_health.mjs earlier in the run ---
   let poolHealth = null;
@@ -367,19 +344,15 @@ async function main() {
   }
 
   // --- transition detection via state file ---
-  let prev = new Set();
   let prevPoolFlags = [];
   let lastDigestDay = null;
   if (existsSync(STATE_FILE)) {
     try {
       const st = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-      prev = new Set(st.outOfRange || []);
       prevPoolFlags = st.poolFlags || [];
       lastDigestDay = st.lastDigestDay ?? null;
     } catch {}
   }
-  const newlyOut = flaggedPositions.filter(r => !prev.has(r.key));
-  const recovered = [...prev].filter(k => !outKeys.has(k));
 
   // If pool_health.mjs could not run, carry the previous flags forward rather than
   // silently clearing them (which would read as "everything recovered").
@@ -395,19 +368,16 @@ async function main() {
   // the digest should still go out on the next run rather than be skipped for a day.
   const today = new Date().toISOString().slice(0, 10);
   const digestDue = new Date().getUTCHours() >= DIGEST_UTC_HOUR && lastDigestDay !== today;
-  const flagChange = newlyOut.length > 0 || recovered.length > 0 || newPoolFlags.length > 0 || clearedPoolFlags.length > 0;
+  const flagChange = newPoolFlags.length > 0 || clearedPoolFlags.length > 0;
   const publish = digestDue || flagChange;
 
   const reasons = [];
-  if (newlyOut.length) reasons.push(`${newlyOut.length} position(s) newly beyond tolerance`);
-  if (recovered.length) reasons.push(`${recovered.length} position(s) back in range`);
   if (newPoolFlags.length) reasons.push(`${newPoolFlags.length} new pool flag(s)`);
   if (clearedPoolFlags.length) reasons.push(`${clearedPoolFlags.length} pool flag(s) cleared`);
 
   // No timestamp here on purpose: this file must change ONLY when we publish, so
   // CI can use its git-diff as both the commit and the Slack trigger.
   writeFileSync(STATE_FILE, JSON.stringify({
-    outOfRange: [...outKeys].sort(),
     poolFlags,
     lastDigestDay: digestDue ? today : lastDigestDay,
   }, null, 2));
@@ -416,16 +386,11 @@ async function main() {
     checkedAt: new Date().toISOString(),
     totalOpenPositions: results.length,
     outOfRangeCount: outNow.length,
-    flaggedCount: flaggedPositions.length,
-    marginalCount,
-    thresholds: { gapWidthFlagPct: GAP_WIDTH_FLAG, gapWidthUrgentPct: GAP_WIDTH_URGENT },
+    outOfRangeCount: outNow.length,
     tvlFilter: allow.active
       ? { thresholdUsd: allow.thresholdUsd, poolsTracked: allow.pools.size, positionsSkippedAsDust: skippedDust }
       : { thresholdUsd: null, note: "allowlist missing/empty — tracking all pools" },
-    newlyOutOfRange: newlyOut,
-    recovered,
     outOfRange: outNow,
-    flaggedPositions,
     poolRange,
     poolHealth,
     newPoolFlags,
@@ -447,11 +412,9 @@ async function main() {
 
   // --- delivery: macOS banner + logs, only on transitions ---
   const ts = new Date().toISOString();
-  log(RUN_LOG, `${ts} publish=${publish}${publish ? `(${reasons.join("; ")})` : ""} open=${results.length} out=${outNow.length} flagged=${flaggedPositions.length} marginal=${marginalCount} poolFlags=${poolFlags.length} newlyOut=${newlyOut.length} recovered=${recovered.length} errors=${errors.length}`);
+  log(RUN_LOG, `${ts} publish=${publish}${publish ? `(${reasons.join("; ")})` : ""} open=${results.length} out=${outNow.length} poolFlags=${poolFlags.length} errors=${errors.length}`);
 
   const lines = [];
-  for (const r of newlyOut) lines.push(`🔴 OUT: ${r.label} ${r.pair} (${r.feeTier}) #${r.tokenId} — price ${r.side} range, ${r.gapPct}% out (${r.gapWidthPct}% of its range)`);
-  for (const k of recovered) lines.push(`🟢 BACK IN RANGE: ${k}`);
   for (const f of newPoolFlags) lines.push(`⚠️ POOL: ${f}`);
   for (const f of clearedPoolFlags) lines.push(`🟢 POOL CLEARED: ${f}`);
 

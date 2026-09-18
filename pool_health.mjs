@@ -125,28 +125,40 @@ async function makeProvider() {
   } catch { return null; }
 }
 
-const POOL_ABI = ["function token0() view returns (address)", "function token1() view returns (address)"];
+const POOL_ABI = [
+  "function token0() view returns (address)",
+  "function token1() view returns (address)",
+  "function slot0() view returns (uint160 sqrtPriceX96,int24 tick,uint16 a,uint16 b,uint16 c,uint8 d,bool e)",
+];
 const ERC20_ABI = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)", "function symbol() view returns (string)"];
 
 // Actual reserves held by the pool contract, valued with the price map. This is
 // real pool-wide TVL, not our share of it.
 async function onchainPool(provider, addr, priceMap) {
   const pool = new ethers.Contract(addr, POOL_ABI, provider);
-  const [t0, t1] = await Promise.all([pool.token0(), pool.token1()]);
+  const [t0, t1, slot0] = await Promise.all([pool.token0(), pool.token1(), pool.slot0()]);
   const side = async (t) => {
     const c = new ethers.Contract(t, ERC20_ABI, provider);
     const [sym, dec, bal] = await Promise.all([c.symbol(), c.decimals(), c.balanceOf(addr)]);
-    const amount = Number(bal) / 10 ** Number(dec);
-    const price = priceMap.get(t.toLowerCase());
-    return { sym, amount, price, usd: price != null ? amount * price : null };
+    return { sym, dec: Number(dec), amount: Number(bal) / 10 ** Number(dec), price: priceMap.get(t.toLowerCase()) ?? null };
   };
   const [a, b] = await Promise.all([side(t0), side(t1)]);
-  if (a.usd == null || b.usd == null) return null;      // can't price both sides
-  const tvl = a.usd + b.usd;
+
+  // Only one side needs a known price: the pool's own sqrtPriceX96 gives the ratio
+  // between them, which prices the other. Every pool we hold has a dollar-ish token
+  // on one side, so this covers tokens that trade nowhere else.
+  const sqrtP = Number(slot0.sqrtPriceX96) / 2 ** 96;
+  const priceOf0In1 = sqrtP * sqrtP * 10 ** (a.dec - b.dec);
+  if (a.price == null && b.price != null && priceOf0In1 > 0) a.price = priceOf0In1 * b.price;
+  if (b.price == null && a.price != null && priceOf0In1 > 0) b.price = a.price / priceOf0In1;
+  if (a.price == null || b.price == null) return null;
+
+  const usd0 = a.amount * a.price, usd1 = b.amount * b.price;
+  const tvl = usd0 + usd1;
   return {
     tvlUsd: tvl,
     priceUsd: a.price,
-    skew: { basePct: tvl > 0 ? (a.usd / tvl) * 100 : 0, baseSym: a.sym, quoteSym: b.sym },
+    skew: { basePct: tvl > 0 ? (usd0 / tvl) * 100 : 0, baseSym: a.sym, quoteSym: b.sym },
   };
 }
 
@@ -202,10 +214,10 @@ async function main() {
         quoteSym = norm(chain.skew.quoteSym);
         Object.assign(row, { source: "onchain", tvlUsd: tvl, priceUsd: price, h24: 0, skew: chain.skew });
       } else if (meta.internalUsd > 0) {
-        // Last resort: our own share of the pool. A different measure from the
-        // column's pool-wide TVL, so it is marked rather than passed off as one.
-        tvl = meta.internalUsd;
-        Object.assign(row, { source: "dune-internal", tvlUsd: tvl, priceUsd: null, h24: 0, skew: null });
+        // We know our own share from Dune but cannot see the pool as a whole.
+        // internalUsd is reported in its own column; tvlUsd stays null rather than
+        // quietly mixing two different measures in one column.
+        Object.assign(row, { source: "internal-only", tvlUsd: null, priceUsd: null, h24: 0, skew: null });
       } else {
         row.unavailable = true;
         row.flags.push({ type: "data_unavailable", severity: "info", notify: false, detail: "no Dexscreener pair, no on-chain price, no internal position" });
@@ -219,7 +231,7 @@ async function main() {
     // Only compare like with like. Dexscreener coverage is intermittent, and its
     // pool-wide TVL is a different measure from our internal share; mixing the two
     // across days would read as a swing when only the data source moved.
-    const prior = samples.filter(s => s.day !== today && (s.source ?? "dexscreener") === row.source);
+    const prior = samples.filter(s => s.day !== today && (s.source ?? "poolwide") === "poolwide");
     // TVL is compared against the last push, not a multi-day median: with a daily
     // digest the useful question is "what moved since yesterday's report".
     const last = prior.length ? prior[prior.length - 1] : null;
@@ -227,13 +239,13 @@ async function main() {
     const haveSkewBaseline = prior.length >= MIN_BASELINE_N;
     row.lastPushDay = last?.day ?? null;
     row.lastPushTvl = last?.tvlUsd ?? null;
-    row.devPct = last && last.tvlUsd ? ((tvl - last.tvlUsd) / last.tvlUsd) * 100 : null;
+    row.devPct = tvl != null && last && last.tvlUsd ? ((tvl - last.tvlUsd) / last.tvlUsd) * 100 : null;
 
     // Pool 2 is tiny and jitters constantly; its only news is the partner coming back.
     if (meta.rule === "redeposit") {
       if (tvl > (meta.redepositAbove ?? 5000))
         row.flags.push({ type: "partner_redeposit", severity: "info", notify: true, detail: `TVL $${tvl.toLocaleString()} above $${(meta.redepositAbove ?? 5000).toLocaleString()} — partner likely redeposited, TVL recovering` });
-    } else if (last && last.tvlUsd) {
+    } else if (tvl != null && last && last.tvlUsd) {
       const dev = row.devPct;
       if (Math.abs(dev) > TVL_SWING_PCT) {
         // Did our own liquidity move by roughly the same amount? Then it isn't news.
@@ -282,8 +294,12 @@ async function main() {
       row.flags.push({ type: "volatile_swing", severity: "warn", notify: true, detail: `24h price ${h24 >= 0 ? "+" : ""}${h24.toFixed(1)}% (threshold ±${VOL_H24_PCT}%)` });
 
     // --- one sample per UTC day ---
-    if (!samples.some(s => s.day === today)) samples.push({ day: today, source: row.source, tvlUsd: tvl, skewPct: basePct ?? null, internalUsd: meta.internalUsd });
-    hist.samples[addr] = samples.slice(-(HISTORY_DAYS + 1));
+    // Dexscreener and on-chain are both pool-wide and comparable; an internal-only
+    // day is a different measure and is not sampled as if it were the pool's TVL.
+    if (tvl != null && !samples.some(s => s.day === today))
+      samples.push({ day: today, source: "poolwide", tvlUsd: tvl, skewPct: basePct ?? null, internalUsd: meta.internalUsd });
+    // don't write an empty array for pools we never got a pool-wide reading for
+    if (samples.length) hist.samples[addr] = samples.slice(-(HISTORY_DAYS + 1));
 
     pools.push(row);
   }
@@ -301,7 +317,7 @@ async function main() {
   writeFileSync(HISTORY, JSON.stringify(hist, null, 2) + "\n");
   const bySource = (k) => pools.filter(p => p.source === k).length;
   console.log(`pool health: ${pools.length} pools, ${report.flagged.length} flagged`
-    + ` (${bySource("dexscreener")} dexscreener, ${bySource("onchain")} on-chain, ${bySource("dune-internal")} internal-only,`
+    + ` (${bySource("dexscreener")} dexscreener, ${bySource("onchain")} on-chain, ${bySource("internal-only")} internal-only,`
     + ` ${pools.filter(p => p.unavailable).length} no data)${errors.length ? `, ${errors.length} error(s)` : ""}`);
 }
 
