@@ -52,10 +52,14 @@ const RPC = process.env.CELO_RPC ?? "https://forno.celo.org";
 // allowlist can never surface them. Pinned so her report stays complete.
 const PINNED = [
   { pool: "0xb135ebde27d366b0d62e579bae4118cb991b820e", pair: "USD₮/CELO (shallow)", rule: "redeposit", redepositAbove: 5000 },
-  { pool: "0xae073a816117dcd1cc237fe4cb99f89f8f8bff4f", pair: "USD₮/USAT (main)" },
+  // The daily list calls this one "main", but it is the drained 0.05% pool -- the
+  // live USAT liquidity sits in the 0.01% pool. Two pools share this pair, so the
+  // suffix says which is which by the only thing that matters about it.
+  { pool: "0xae073a816117dcd1cc237fe4cb99f89f8f8bff4f", pair: "USD₮/USAT(no liq)" },
 ];
 
-// Liz's seven, for the ⭑ marker.
+// The seven on the daily list. Retained on each row for downstream use;
+// no longer marked in the rendered table.
 const LIZ = new Set([
   "0x6cde5f5a192fbf3fd84df983aa6dc30dbd9f8fac", "0xb135ebde27d366b0d62e579bae4118cb991b820e",
   "0x1a810e0b6c2dd5629afa2f0c898b9512c6f78846", "0xae073a816117dcd1cc237fe4cb99f89f8f8bff4f",

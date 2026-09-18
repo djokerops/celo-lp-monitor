@@ -379,8 +379,16 @@ async function main() {
 
   // If pool_health.mjs could not run, carry the previous flags forward rather than
   // silently clearing them (which would read as "everything recovered").
+  // Keyed on the pool address, not the pair name: two pools can share a pair and
+  // differ only by fee tier (there are two USD₮/USAT pools), and a name-based key
+  // would merge their flags into one.
+  const flagNames = new Map();
   const poolFlags = poolHealth
-    ? poolHealth.pools.flatMap(p => p.flags.filter(f => f.notify).map(f => `${p.pair}:${f.type}`)).sort()
+    ? poolHealth.pools.flatMap(p => p.flags.filter(f => f.notify).map(f => {
+        const key = `${p.pool}:${f.type}`;
+        flagNames.set(key, `${p.pair} ${f.type}`);
+        return key;
+      })).sort()
     : prevPoolFlags;
   const newPoolFlags = poolFlags.filter(f => !prevPoolFlags.includes(f));
   const clearedPoolFlags = prevPoolFlags.filter(f => !poolFlags.includes(f));
@@ -438,8 +446,8 @@ async function main() {
   log(RUN_LOG, `${ts} publish=${publish}${publish ? `(${reasons.join("; ")})` : ""} open=${results.length} out=${outNow.length} poolFlags=${poolFlags.length} errors=${errors.length}`);
 
   const lines = [];
-  for (const f of newPoolFlags) lines.push(`⚠️ POOL: ${f}`);
-  for (const f of clearedPoolFlags) lines.push(`🟢 POOL CLEARED: ${f}`);
+  for (const f of newPoolFlags) lines.push(`⚠️ POOL: ${flagNames.get(f) ?? f}`);
+  for (const f of clearedPoolFlags) lines.push(`🟢 POOL CLEARED: ${flagNames.get(f) ?? f}`);
 
   // Transitions are recorded to alerts.log (committed by CI) and surfaced via
   // status.md. No desktop banner: delivery is GitHub -> reader -> your app.
