@@ -4,9 +4,7 @@
   ],
   "poolFlags": [
     "KESm/USD₮:skew_shift",
-    "USD₮/GBPm:skew_shift",
-    "USD₮/USDC:skew_shift",
-    "USD₮/USDm:skew_shift"
+    "USD₮/GBPm:skew_shift"
   ],
   "lastDigestDay": "2026-09-17"
 }
