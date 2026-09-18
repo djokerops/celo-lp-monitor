@@ -134,6 +134,18 @@ const FLAG_LABEL = {
 
 // Where our own liquidity sits relative to each pool's price, rolled up per pool.
 // Pools we hold nothing in (the pinned ones from the daily list) show no range.
+// "LP - stabila, positionNFT(s) - 198286, 198350; LP - APF, positionNFT - 201522"
+function fmtPositions(out) {
+  const byLp = new Map();
+  for (const o of out) {
+    if (!byLp.has(o.label)) byLp.set(o.label, []);
+    byLp.get(o.label).push(o.tokenId);
+  }
+  return [...byLp]
+    .map(([lp, ids]) => `LP - ${lp}, positionNFT${ids.length > 1 ? "(s)" : ""} - ${ids.join(", ")}`)
+    .join("; ");
+}
+
 function rangeCell(r, p) {
   const rg = r.poolRange?.[String(p.pool).toLowerCase()];
   if (!rg || !rg.count) return "—";
@@ -180,7 +192,7 @@ function renderSlack(r) {
       // Slack names the positions but not the pool address: a 42-character hex
       // string wraps badly on a phone and nobody pastes it out of a notification.
       detail.push(`• *${p.pair}*: ${f.detail}`);
-      if (f.positions?.length) detail.push(`    out of range: ${f.positions.join(", ")}`);
+      if (f.positionsText) detail.push(`    out of range: ${f.positionsText}`);
     }
 
   // fixed-width table: pool / TVL / 24h / range. Status lives in the lines above.
@@ -210,7 +222,8 @@ function renderSlack(r) {
   if (detail.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: detail.join("\n").slice(0, 2900) } });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: table.slice(0, 2900) } });
   blocks.push({ type: "context", elements: [{ type: "mrkdwn", text:
-    `${r.checkedAt} · <https://github.com/djokerops/celo-lp-monitor/blob/main/status.md|full report>` }] });
+    `${r.checkedAt} · <https://github.com/djokerops/celo-lp-monitor/blob/main/status.md|full report>`
+    + `\n* message better viewed on pc` }] });
 
   // text is the notification preview and the fallback where blocks cannot render
   return { text: `${head} — ${outCount} position(s) out of range, ${flaggedPools.length} pool(s) flagged`, blocks };
@@ -253,10 +266,10 @@ function renderStatus(r) {
       out.push(``);
       for (const p of flaggedPools)
         for (const f of p.flags.filter(f => f.notify)) {
-          out.push(`**${p.pair}**: ${f.detail}${f.positions?.length ? " -- pool:" : ""}`);
+          out.push(`**${p.pair}**: ${f.detail}${f.positionsText ? " -- pool:" : ""}`);
           // Enough to act on without opening anything else: which pool, whose
           // position, and which tokenId.
-          if (f.positions?.length) out.push(`\`${f.pool}\` · out of range: ${f.positions.join(", ")}`);
+          if (f.positionsText) out.push(`\`${f.pool}\` · out of range: ${f.positionsText}`);
           out.push(``);
         }
     }
@@ -368,9 +381,10 @@ async function main() {
         type: "out_of_range", severity: "warn", notify: true,
         // checksummed so the address can be pasted straight into an explorer
         pool: (() => { try { return ethers.getAddress(p.pool); } catch { return p.pool; } })(),
-        // No "#" before the id: Slack reads #198286 as a hex colour and renders a
-        // colour chip instead of the number.
-        positions: rg.out.map(o => `${o.label} positionNFT ${o.tokenId}`),
+        // Grouped by LP so the label is not repeated per id, and with no "#"
+        // before the number -- Slack reads #198286 as a hex colour and renders a
+        // colour chip instead of the id.
+        positionsText: fmtPositions(rg.out),
         detail: rg.count === 1
           ? `our only position here is out of range(earning no fees)`
           : rg.outCount === rg.count
