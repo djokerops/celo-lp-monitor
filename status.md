@@ -1,6 +1,6 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-09-18T04:06:41.160Z_
+_Last checked: 2026-09-18T04:07:56.929Z_
 
 _Daily digest — 3 new pool flag(s)_
 
@@ -12,7 +12,7 @@ _Daily digest — 3 new pool flag(s)_
 | USD₮/USDm | $643,445 | $627,176 | $0.9992 | 82% USD₮ / 18% USDm | in range | -0.0% | OK |
 | USD₮/WBTC ⭑ | $213,414 | $182,326 | $77,149 | 56% WBTC / 44% USD₮ | in range | -1.4% | OK |
 | USD₮/WETH ⭑ | $204,465 | $193,579 | $2,474 | 51% WETH / 49% USD₮ | in range | -0.8% | OK |
-| CELO/USD₮ ⭑ | $195,129 | $172,874 | $0.9994 | 55% USD₮ / 45% CELO | in range | +1.0% | OK |
+| CELO/USD₮ ⭑ | $195,204 | $172,874 | $1.0001 | 55% USD₮ / 45% CELO | in range | +1.1% | OK |
 | USD₮/USDC ⭑ | $187,249 | $166,504 | $1.0001 | 15% USDC / 85% USD₮ | 1 of 2 out | -0.0% | 🔴 out of range |
 | USD₮/cNGN | $180,591 | $168,099 | $0.0007279 | 49% cNGN / 51% USD₮ | in range | -0.1% | OK |
 | USD₮/GBPm | $106,604 | $105,626 | $1.3300 | 43% GBPm / 57% USD₮ | in range | -0.3% | OK |
