@@ -190,16 +190,15 @@ function renderSlack(r) {
     const rg = r.poolRange?.[String(p.pool).toLowerCase()];
     // Just OUT or IN. How many, and every other flag, is spelled out above.
     const range = !rg || !rg.count ? "—" : rg.outCount ? "OUT" : "IN";
-    const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
     const base = p.skew ? Math.round(p.skew.basePct) : null;
     const split = base == null ? "—" : `${base}% ${p.skew.baseSym}/${100 - base}% ${p.skew.quoteSym}`;
     return [p.pair.slice(0, 21),
             p.tvlUsd == null ? "—" : shortUsd(p.tvlUsd),
             p.internalUsd ? shortUsd(p.internalUsd) : "—",
-            split, dev, range];
+            split, range];
   };
   const body = rows.map(cell);
-  const head4 = ["POOL", "TVL", "Internal", "Split", "24H", "RANGE"];
+  const head4 = ["POOL", "TVL", "Internal", "Split", "RANGE"];
   const w = head4.map((h, i) => Math.max(h.length, ...body.map(b => b[i].length)));
   const fmtRow = (c) => c.map((v, i) => i === 0 ? v.padEnd(w[i]) : v.padStart(w[i])).join("  ");
   const table = ["```", fmtRow(head4), ...body.map(fmtRow), "```"].join("\n");
