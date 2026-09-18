@@ -12,7 +12,8 @@
 // Env:
 //   DUNE_API_KEY          required to actually refresh; if unset, exits 0 (keeps file)
 //   DUNE_TVL_THRESHOLD    USD threshold (default 100)
-//   REFRESH_MAX_AGE_H     skip if file younger than this many hours (default 20)
+//   REFRESH_MAX_AGE_H     skip if file younger than this many hours (default 0:
+//                         check every run, since reading cached results is free)
 //   REFRESH_MIN_UTC_HOUR  don't pay for a fresh execution before this UTC hour
 //                         (default 12); cached results are used at any hour
 //   STALE_EXECUTE_H       pay for a fresh execution past this cache age (default 30)
@@ -27,7 +28,7 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 const FILE = join(__dir, "pools_allowlist.json");
 const QUERY_ID = 8390438;
 const THRESHOLD = Number(process.env.DUNE_TVL_THRESHOLD ?? 100);
-const MAX_AGE_H = Number(process.env.REFRESH_MAX_AGE_H ?? 20);
+const MAX_AGE_H = Number(process.env.REFRESH_MAX_AGE_H ?? 0);
 const MIN_UTC_HOUR = Number(process.env.REFRESH_MIN_UTC_HOUR ?? 12);
 const KEY = process.env.DUNE_API_KEY;
 const API = process.env.DUNE_API_BASE ?? "https://api.dune.com/api/v1";
@@ -47,7 +48,7 @@ if (existsSync(FILE)) {
 }
 if (!KEY) done("DUNE_API_KEY not set — keeping existing allowlist");
 
-const STALE_EXECUTE_H = Number(process.env.STALE_EXECUTE_H ?? 30);
+const STALE_EXECUTE_H = Number(process.env.STALE_EXECUTE_H ?? 20);
 const h = { "X-Dune-API-Key": KEY };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -123,10 +124,19 @@ if (Object.keys(pools).length === 0) {
   process.exit(1);
 }
 
-writeFileSync(FILE, JSON.stringify({
+// Checking hourly must not mean rewriting hourly: a new generatedAt on every run
+// would show up as a file change and commit every hour. Only the pool data counts.
+const next = {
   generatedAt: new Date().toISOString(),
   thresholdUsd: THRESHOLD,
   source: `dune query ${QUERY_ID} (uni-internal-liq-per-pool)`,
   pools,
-}, null, 2) + "\n");
+};
+let unchanged = false;
+try {
+  const cur = JSON.parse(readFileSync(FILE, "utf8"));
+  unchanged = JSON.stringify(cur.pools) === JSON.stringify(pools) && cur.thresholdUsd === THRESHOLD;
+} catch {}
+if (unchanged) done(`allowlist already current: ${Object.keys(pools).length} pools >= $${THRESHOLD}`);
+writeFileSync(FILE, JSON.stringify(next, null, 2) + "\n");
 console.log(`refreshed allowlist: ${Object.keys(pools).length} pools >= $${THRESHOLD}`);

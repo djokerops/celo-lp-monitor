@@ -30,6 +30,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ALLOWLIST = join(__dir, "pools_allowlist.json");
@@ -96,23 +97,41 @@ async function fetchPairs(addresses) {
 // Dexscreener prices the base token directly; the quote token's price falls out of
 // the pool's own composition. Collecting both across every covered pool gives a
 // token -> USD map good enough to value a pool Dexscreener does not index.
+// Prices carry a confidence rank, because a token is only as well priced as its
+// distance from a dollar. stCELO is the cautionary case: Dexscreener quotes it ~5%
+// below what the CELO/stCELO pool ratio and CELO's own dollar price imply, which
+// dragged that pool's TVL below our share of it -- an impossible reading.
+//   rank 0: the token is a USD stable
+//   rank 1: priced in a pool whose other side is a USD stable
+//   rank 2: priced only against another floating token
 function buildPriceMap(pairs) {
   const acc = new Map();
-  const add = (addr, price) => {
+  const add = (addr, sym, price, rank) => {
     if (!addr || !Number.isFinite(price) || price <= 0) return;
+    // A token we classify as a dollar stable must actually be worth about a dollar.
+    // Without this, one bad quote silently revalues every pool holding that token.
+    if (USD_STABLE.has(sym) && (price < 0.5 || price > 2)) return;
     const k = addr.toLowerCase();
-    if (!acc.has(k)) acc.set(k, []);
-    acc.get(k).push(price);
+    const cur = acc.get(k);
+    if (!cur || rank < cur.rank) acc.set(k, { rank, prices: [price] });
+    else if (rank === cur.rank) cur.prices.push(price);
   };
   for (const p of pairs) {
     const price = Number(p.priceUsd) || 0;
     const tvl = Number(p.liquidity?.usd) || 0;
     const baseAmt = Number(p.liquidity?.base) || 0;
     const quoteAmt = Number(p.liquidity?.quote) || 0;
-    add(p.baseToken?.address, price);
-    if (quoteAmt > 0 && tvl > 0) add(p.quoteToken?.address, (tvl - baseAmt * price) / quoteAmt);
+    const bs = norm(p.baseToken?.symbol), qs = norm(p.quoteToken?.symbol);
+    add(p.baseToken?.address, bs, price, USD_STABLE.has(bs) ? 0 : USD_STABLE.has(qs) ? 1 : 2);
+    // The quote price is a residual -- (pool value minus the base side) divided by
+    // the quote reserve -- so it is only trustworthy when that reserve is a real
+    // share of the pool. 87 USDm sitting in a $147k pool turned rounding into
+    // $3.02 per "dollar", which then revalued every other pool holding USDm.
+    const quoteUsd = tvl - baseAmt * price;
+    if (quoteAmt > 0 && tvl > 0 && quoteUsd / tvl >= 0.05)
+      add(p.quoteToken?.address, qs, quoteUsd / quoteAmt, USD_STABLE.has(qs) ? 0 : USD_STABLE.has(bs) ? 1 : 2);
   }
-  return new Map([...acc].map(([k, v]) => [k, median(v)]));
+  return new Map([...acc].map(([k, v]) => [k, { price: median(v.prices), rank: v.rank }]));
 }
 
 // ethers is loaded lazily: the on-chain fallback is a rare path, and this module
@@ -140,17 +159,21 @@ async function onchainPool(provider, addr, priceMap) {
   const side = async (t) => {
     const c = new ethers.Contract(t, ERC20_ABI, provider);
     const [sym, dec, bal] = await Promise.all([c.symbol(), c.decimals(), c.balanceOf(addr)]);
-    return { sym, dec: Number(dec), amount: Number(bal) / 10 ** Number(dec), price: priceMap.get(t.toLowerCase()) ?? null };
+    const entry = priceMap.get(t.toLowerCase());
+    return { sym, dec: Number(dec), amount: Number(bal) / 10 ** Number(dec), price: entry?.price ?? null, rank: entry?.rank ?? 99 };
   };
   const [a, b] = await Promise.all([side(t0), side(t1)]);
 
-  // Only one side needs a known price: the pool's own sqrtPriceX96 gives the ratio
-  // between them, which prices the other. Every pool we hold has a dollar-ish token
-  // on one side, so this covers tokens that trade nowhere else.
+  // The pool's own sqrtPriceX96 gives the exact ratio between the two tokens, so
+  // only the better-priced side needs an external quote -- the other is derived.
+  // That keeps both sides internally consistent and covers tokens trading nowhere
+  // else. When both sides are equally well priced, their own quotes are kept.
   const sqrtP = Number(slot0.sqrtPriceX96) / 2 ** 96;
   const priceOf0In1 = sqrtP * sqrtP * 10 ** (a.dec - b.dec);
-  if (a.price == null && b.price != null && priceOf0In1 > 0) a.price = priceOf0In1 * b.price;
-  if (b.price == null && a.price != null && priceOf0In1 > 0) b.price = a.price / priceOf0In1;
+  if (priceOf0In1 > 0) {
+    if (a.price != null && (b.price == null || a.rank < b.rank)) b.price = a.price / priceOf0In1;
+    else if (b.price != null && (a.price == null || b.rank < a.rank)) a.price = priceOf0In1 * b.price;
+  }
   if (a.price == null || b.price == null) return null;
 
   const usd0 = a.amount * a.price, usd1 = b.amount * b.price;
@@ -185,7 +208,27 @@ async function main() {
     const row = { pool: addr, pair: meta.pair, liz: LIZ.has(addr), internalUsd: meta.internalUsd, flags: [] };
     let tvl, price, basePct, baseSym, quoteSym, h24 = 0;
 
-    if (d) {
+    // Value every pool the same way -- on-chain reserves against the ranked price
+    // map -- so no two rows are computed by different methods. Dexscreener is kept
+    // for the 24h move and volume, which the chain cannot give us.
+    let chain = null;
+    if (provider) {
+      try { chain = await onchainPool(provider, addr, priceMap); }
+      catch (e) { errors.push(`${meta.pair}: on-chain read failed: ${e.message}`); }
+    }
+
+    if (chain) {
+      tvl = chain.tvlUsd;
+      price = chain.priceUsd;
+      basePct = chain.skew.basePct;
+      baseSym = norm(chain.skew.baseSym);
+      quoteSym = norm(chain.skew.quoteSym);
+      h24 = d ? Number(d.priceChange?.h24) || 0 : 0;
+      Object.assign(row, {
+        source: "onchain", tvlUsd: tvl, priceUsd: price, h24,
+        volumeH24: d ? Number(d.volume?.h24) || 0 : 0, skew: chain.skew,
+      });
+    } else if (d) {
       tvl = Number(d.liquidity?.usd) || 0;
       price = Number(d.priceUsd) || 0;
       const baseAmt = Number(d.liquidity?.base) || 0;
@@ -199,21 +242,7 @@ async function main() {
         skew: { basePct, baseSym: d.baseToken?.symbol, quoteSym: d.quoteToken?.symbol },
       });
     } else {
-      // Dexscreener drops pools it no longer indexes -- including ones that simply
-      // ran dry. Falling back to real reserves distinguishes "we cannot see it"
-      // from "it is empty", which are very different pieces of news.
-      let chain = null;
-      if (provider) {
-        try { chain = await onchainPool(provider, addr, priceMap); }
-        catch (e) { errors.push(`${meta.pair}: on-chain read failed: ${e.message}`); }
-      }
-      if (chain) {
-        ({ tvlUsd: tvl, priceUsd: price } = chain);
-        basePct = chain.skew.basePct;
-        baseSym = norm(chain.skew.baseSym);
-        quoteSym = norm(chain.skew.quoteSym);
-        Object.assign(row, { source: "onchain", tvlUsd: tvl, priceUsd: price, h24: 0, skew: chain.skew });
-      } else if (meta.internalUsd > 0) {
+      if (meta.internalUsd > 0) {
         // We know our own share from Dune but cannot see the pool as a whole.
         // internalUsd is reported in its own column; tvlUsd stays null rather than
         // quietly mixing two different measures in one column.
@@ -322,4 +351,8 @@ async function main() {
 }
 
 // Never fail the job: the range monitor matters more than pool health.
-main().catch(e => { console.error(`pool health failed (non-fatal): ${e.message}`); process.exit(0); });
+// Guarded so the module can be imported by tests without running the whole check.
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) main().catch(e => { console.error(`pool health failed (non-fatal): ${e.message}`); process.exit(0); });
+
+export { buildPriceMap };

@@ -182,15 +182,12 @@ function renderSlack(r) {
   const rows = ph ? [...ph.pools].filter(p => !p.unavailable)
     .sort((a, b) => (b.tvlUsd ?? b.internalUsd ?? 0) - (a.tvlUsd ?? a.internalUsd ?? 0)) : [];
   const cell = (p) => {
-    const mark = p.source === "onchain" ? "†" : " ";
     const rg = r.poolRange?.[String(p.pool).toLowerCase()];
     const range = !rg || !rg.count ? "—" : !rg.outCount ? "in range" : rg.outCount === rg.count ? "OUT" : `${rg.outCount}/${rg.count} out`;
     const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
     const flag = p.flags.filter(f => f.notify).map(f => SHORT_FLAG[f.type] || f.type).join(",");
-    // plain ASCII star inside the code block: ⭑ is double-width in some monospace
-    // fonts, which would shear the column alignment.
-    return [(p.pair + (p.liz ? " *" : "")).slice(0, 21),
-            p.tvlUsd == null ? "—" : shortUsd(p.tvlUsd) + mark,
+    return [p.pair.slice(0, 21),
+            p.tvlUsd == null ? "—" : shortUsd(p.tvlUsd),
             p.internalUsd ? shortUsd(p.internalUsd) : "—",
             dev, flag || range];
   };
@@ -207,7 +204,7 @@ function renderSlack(r) {
   if (detail.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: detail.join("\n").slice(0, 2900) } });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: table.slice(0, 2900) } });
   blocks.push({ type: "context", elements: [{ type: "mrkdwn", text:
-    `${r.checkedAt} · * daily list · † on-chain · ‡ internal only · <https://github.com/djokerops/celo-lp-monitor/blob/main/status.md|full report>` }] });
+    `${r.checkedAt} · <https://github.com/djokerops/celo-lp-monitor/blob/main/status.md|full report>` }] });
 
   // text is the notification preview and the fallback where blocks cannot render
   return { text: `${head} — ${outCount} position(s) out of range, ${flaggedPools.length} pool(s) flagged`, blocks };
@@ -237,16 +234,14 @@ function renderStatus(r) {
     // A pool nothing can price is dropped rather than shown as an empty row.
     const ordered = [...ph.pools].filter(p => !p.unavailable).sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
     for (const p of ordered) {
-      const star = p.liz ? " ⭑" : "";
       const split = p.skew ? `${p.skew.basePct.toFixed(0)}% ${p.skew.baseSym} / ${(100 - p.skew.basePct).toFixed(0)}% ${p.skew.quoteSym}` : "—";
       const dev = p.devPct == null ? "—" : `${p.devPct >= 0 ? "+" : ""}${p.devPct.toFixed(1)}%`;
       const notified = p.flags.filter(f => f.notify);
       const status = notified.length ? notified.map(f => FLAG_LABEL[f.type] || f.type).join(", ") : "OK";
-      const mark = p.source === "onchain" ? " †" : "";
       const price = p.priceUsd == null ? "—" : fmtPrice(p.priceUsd);
-      const tvl = p.tvlUsd == null ? "—" : fmtUsd(p.tvlUsd) + mark;
+      const tvl = p.tvlUsd == null ? "—" : fmtUsd(p.tvlUsd);
       const internal = p.internalUsd ? fmtUsd(p.internalUsd) : "—";
-      out.push(`| ${p.pair}${star} | ${tvl} | ${internal} | ${price} | ${split} | ${rangeCell(r, p)} | ${dev} | ${status} |`);
+      out.push(`| ${p.pair} | ${tvl} | ${internal} | ${price} | ${split} | ${rangeCell(r, p)} | ${dev} | ${status} |`);
     }
     if (flaggedPools.length) {
       out.push(``);
@@ -254,11 +249,6 @@ function renderStatus(r) {
         for (const f of p.flags.filter(f => f.notify)) out.push(`**${p.pair}** — ${f.detail}`, ``);
     }
     while (out.length && out[out.length - 1] === "") out.pop();
-    const notes = [];
-    if (ph.pools.some(p => p.liz)) notes.push(`⭑ = on the daily pool list`);
-    if (ph.pools.some(p => p.source === "onchain")) notes.push(`† TVL read from on-chain reserves (Dexscreener does not index this pool)`);
-    if (ph.pools.some(p => p.source === "internal-only")) notes.push(`TVL "—" = pool-wide figure unavailable; the Internal column is still exact`);
-    if (notes.length) out.push(``, notes.join("  \n"));
   }
 
   // --- footer ---
@@ -271,10 +261,8 @@ function renderStatus(r) {
   out.push(``, `---`, `${r.totalOpenPositions} open positions checked · ${outCount} out of range · ${r.errors.length} error(s)${filterNote}`);
   if (ph) {
     const noData = ph.pools.filter(p => p.unavailable);
-    const fallback = ph.pools.filter(p => p.source === "onchain");
     out.push(`Pool health: ${ph.poolsChecked - noData.length} pools listed, ${flaggedPools.length} flagged`
-      + (fallback.length ? ` · ${fallback.length} priced on-chain` : "")
-      + (noData.length ? ` · ${noData.length} omitted, unpriceable by any source (${noData.map(p => p.pair).join(", ")})` : ""));
+      + (noData.length ? ` · ${noData.length} omitted, unpriceable (${noData.map(p => p.pair).join(", ")})` : ""));
   }
   if (r.errors.length) out.push(``, "```", ...r.errors.slice(0, 5), "```");
   return out.join("\n") + "\n";

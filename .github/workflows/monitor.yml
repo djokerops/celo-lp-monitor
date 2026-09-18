@@ -26,8 +26,10 @@ jobs:
 
       - run: npm ci
 
-      # Self-throttled: only calls Dune when pools_allowlist.json is >20h old,
-      # and no-ops entirely if DUNE_API_KEY is unset (keeps the existing file).
+      # Runs every hour like the rest of the check. Reading Dune's cached results
+      # is free, and the file is only rewritten when the pool set actually changes,
+      # so hourly freshness does not mean hourly commits. A paid execution still
+      # happens at most once a day, and never before REFRESH_MIN_UTC_HOUR.
       - name: Refresh TVL allowlist (daily, via Dune)
         env:
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
