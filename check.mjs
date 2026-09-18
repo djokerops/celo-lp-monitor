@@ -176,7 +176,10 @@ function renderSlack(r) {
 
   const detail = [];
   for (const p of flaggedPools)
-    for (const f of p.flags.filter(f => f.notify)) detail.push(`• *${p.pair}* — ${f.detail}`);
+    for (const f of p.flags.filter(f => f.notify)) {
+      detail.push(`• *${p.pair}* — ${f.detail}`);
+      if (f.positions?.length) detail.push(`    \`${f.pool}\`  ${f.positions.join(", ")}`);
+    }
 
   // fixed-width table: pool / TVL / 24h / range. Status lives in the lines above.
   const rows = ph ? [...ph.pools].filter(p => !p.unavailable)
@@ -246,7 +249,13 @@ function renderStatus(r) {
     if (flaggedPools.length) {
       out.push(``);
       for (const p of flaggedPools)
-        for (const f of p.flags.filter(f => f.notify)) out.push(`**${p.pair}** — ${f.detail}`, ``);
+        for (const f of p.flags.filter(f => f.notify)) {
+          out.push(`**${p.pair}** — ${f.detail}`);
+          // Enough to act on without opening anything else: which pool, whose
+          // position, and which tokenId.
+          if (f.positions?.length) out.push(`\`${f.pool}\` · out of range: ${f.positions.join(", ")}`);
+          out.push(``);
+        }
     }
     while (out.length && out[out.length - 1] === "") out.pop();
   }
@@ -319,11 +328,12 @@ async function main() {
   const poolRange = {};
   for (const r of results) {
     const k = String(r.pool).toLowerCase();
-    const cur = poolRange[k] ??= { count: 0, outCount: 0 };
+    const cur = poolRange[k] ??= { count: 0, outCount: 0, out: [] };
     cur.count++;
     // Binary on purpose. A v3 position earns nothing the moment price leaves the
     // band, at any distance, so how far out it is carries no economic information.
-    if (!r.inRange) cur.outCount++;
+    // Which ones are out is recorded so a flag can name them.
+    if (!r.inRange) { cur.outCount++; cur.out.push({ label: r.label, tokenId: r.tokenId }); }
   }
 
   const outNow = results.filter(r => !r.inRange);
@@ -353,6 +363,9 @@ async function main() {
       const rg = poolRange[String(p.pool).toLowerCase()];
       if (rg?.outCount) p.flags.push({
         type: "out_of_range", severity: "warn", notify: true,
+        // checksummed so the address can be pasted straight into an explorer
+        pool: (() => { try { return ethers.getAddress(p.pool); } catch { return p.pool; } })(),
+        positions: rg.out.map(o => `${o.label} #${o.tokenId}`),
         detail: rg.count === 1
           ? `our only position here is out of range — earning no fees`
           : rg.outCount === rg.count

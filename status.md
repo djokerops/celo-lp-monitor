@@ -1,6 +1,6 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-09-18T04:30:11.678Z_
+_Last checked: 2026-09-18T04:51:02.331Z_
 
 _Daily digest — 3 new pool flag(s)_
 
@@ -28,10 +28,13 @@ _Daily digest — 3 new pool flag(s)_
 | USD₮/USAT (main) | $1 | — | $0.9993 | 50% USD₮ / 50% USAT | — | — | OK |
 
 **CELO/stCELO** — 2 of our 3 positions here are out of range — earning no fees
+`0x60Ac25Da2ADA3be14a2a8C04e45b072BEd965966` · out of range: stabila #198286, stabila #198350
 
 **USD₮/USDC** — 1 of our 2 positions here is out of range — earning no fees
+`0x1a810e0B6c2dd5629AFa2f0c898b9512C6F78846` · out of range: APF #201522
 
 **USDm/EURm** — our only position here is out of range — earning no fees
+`0x1c8DafD358d308b880F71eDB5170B010b106Ca60` · out of range: APF #201506
 
 ---
 22 open positions checked · 4 out of range · 0 error(s) · pools ≥ $100 (16 tracked, 3 dust skipped)
