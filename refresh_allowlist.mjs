@@ -13,9 +13,11 @@
 //   DUNE_API_KEY          required to actually refresh; if unset, exits 0 (keeps file)
 //   DUNE_TVL_THRESHOLD    USD threshold (default 100)
 //   REFRESH_MAX_AGE_H     skip if file younger than this many hours (default 20)
-//   REFRESH_MIN_UTC_HOUR  don't refresh before this UTC hour (default 12)
+//   REFRESH_MIN_UTC_HOUR  don't pay for a fresh execution before this UTC hour
+//                         (default 12); cached results are used at any hour
 //   STALE_EXECUTE_H       pay for a fresh execution past this cache age (default 30)
 //   DUNE_API_BASE         override API root (tests)
+//   NOW_UTC_HOUR          override the current UTC hour (tests)
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -44,12 +46,6 @@ if (existsSync(FILE)) {
   } catch {}
 }
 if (!KEY) done("DUNE_API_KEY not set — keeping existing allowlist");
-
-// Before MIN_UTC_HOUR, prices.day has no row for current_date and the query
-// prices every position at $0. Refreshing now can only produce a bad answer.
-if (new Date().getUTCHours() < MIN_UTC_HOUR && existingCount > 0) {
-  done(`before ${MIN_UTC_HOUR}:00 UTC — today's prices aren't published yet; deferring refresh (${existingCount} pools kept)`);
-}
 
 const STALE_EXECUTE_H = Number(process.env.STALE_EXECUTE_H ?? 30);
 const h = { "X-Dune-API-Key": KEY };
@@ -88,7 +84,16 @@ async function execute() {
 let res = await jf(`${API}/query/${QUERY_ID}/results?limit=1000`, { headers: h });
 const endedAt = res.execution_ended_at ? new Date(res.execution_ended_at).getTime() : 0;
 const cacheAgeH = endedAt ? (Date.now() - endedAt) / 3.6e6 : Infinity;
+// NOW_UTC_HOUR lets tests pin the clock; without it this is simply the real hour.
+const nowUtcHour = Number(process.env.NOW_UTC_HOUR ?? new Date().getUTCHours());
+const tooEarlyToExecute = nowUtcHour < MIN_UTC_HOUR;
 if (cacheAgeH > STALE_EXECUTE_H) {
+  // Only a *fresh execution* is dangerous before MIN_UTC_HOUR: prices.day has no
+  // row for the current day yet, so the query would price everything at $0. Using
+  // an existing cached execution is always fine, whatever the hour -- and it means
+  // a manual re-run of the query is picked up immediately rather than a day later.
+  if (tooEarlyToExecute && existingCount > 0)
+    done(`cached results ${cacheAgeH.toFixed(1)}h old but it is before ${MIN_UTC_HOUR}:00 UTC — today's prices aren't published; keeping ${existingCount} pools`);
   console.log(`cached results ${Number.isFinite(cacheAgeH) ? cacheAgeH.toFixed(1) + "h" : "missing"} old — executing fresh`);
   res = await execute();
 } else {
@@ -100,7 +105,7 @@ let pools = selectPools(res);
 // A cached execution that itself ran before MIN_UTC_HOUR is priced at $0 across
 // the board and will keep poisoning every run until it ages out. Re-execute once
 // rather than serving those zeros for the rest of the cache window.
-if (Object.keys(pools).length === 0 && endedAt && new Date(endedAt).getUTCHours() < MIN_UTC_HOUR) {
+if (Object.keys(pools).length === 0 && endedAt && new Date(endedAt).getUTCHours() < MIN_UTC_HOUR && !tooEarlyToExecute) {
   console.log(`cached execution ran at ${new Date(endedAt).toISOString()} (before ${MIN_UTC_HOUR}:00 UTC) and priced everything at $0 — re-executing`);
   res = await execute();
   pools = selectPools(res);

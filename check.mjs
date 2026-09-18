@@ -124,6 +124,7 @@ const fmtPrice = (n) =>
 // Only flagged items appear: an all-clear run produces a short file, and pools
 // that are behaving are not listed at all.
 const FLAG_LABEL = {
+  out_of_range: "🔴 out of range",
   peg_break: "🔴 peg break",
   tvl_swing: "⚠️ TVL swing",
   skew_shift: "⚠️ skew shift",
@@ -150,6 +151,7 @@ const shortUsd = (n) =>
   : `$${n.toFixed(n < 10 ? 2 : 0)}`;
 
 const SHORT_FLAG = {
+  out_of_range: "OUT of range",
   peg_break: "peg break", tvl_swing: "TVL swing", skew_shift: "skew shift",
   volatile_swing: "volatile", partner_redeposit: "partner redeposit",
 };
@@ -251,6 +253,7 @@ function renderStatus(r) {
       for (const p of flaggedPools)
         for (const f of p.flags.filter(f => f.notify)) out.push(`**${p.pair}** — ${f.detail}`, ``);
     }
+    while (out.length && out[out.length - 1] === "") out.pop();
     const notes = [];
     if (ph.pools.some(p => p.liz)) notes.push(`⭑ = on the daily pool list`);
     if (ph.pools.some(p => p.source === "onchain")) notes.push(`† TVL read from on-chain reserves (Dexscreener does not index this pool)`);
@@ -352,6 +355,23 @@ async function main() {
       prevPoolFlags = st.poolFlags || [];
       lastDigestDay = st.lastDigestDay ?? null;
     } catch {}
+  }
+
+  // Out of range is the flag that matters: a v3 position earns nothing at all the
+  // moment price leaves its band. Injected here rather than in pool_health.mjs
+  // because range comes from on-chain positions, not from market data.
+  if (poolHealth) {
+    for (const p of poolHealth.pools) {
+      const rg = poolRange[String(p.pool).toLowerCase()];
+      if (rg?.outCount) p.flags.push({
+        type: "out_of_range", severity: "warn", notify: true,
+        detail: rg.count === 1
+          ? `our only position here is out of range — earning no fees`
+          : rg.outCount === rg.count
+            ? `all ${rg.count} of our positions here are out of range — earning no fees`
+            : `${rg.outCount} of our ${rg.count} positions here ${rg.outCount === 1 ? "is" : "are"} out of range — earning no fees`,
+      });
+    }
   }
 
   // If pool_health.mjs could not run, carry the previous flags forward rather than

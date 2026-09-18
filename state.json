@@ -1,4 +1,8 @@
 {
-  "poolFlags": [],
-  "lastDigestDay": "2026-09-17"
+  "poolFlags": [
+    "CELO/stCELO:out_of_range",
+    "USDm/EURm:out_of_range",
+    "USD₮/USDC:out_of_range"
+  ],
+  "lastDigestDay": "2026-09-18"
 }
