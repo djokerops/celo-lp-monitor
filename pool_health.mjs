@@ -268,8 +268,22 @@ async function main() {
     // TVL is compared against the last push, not a multi-day median: with a daily
     // digest the useful question is "what moved since yesterday's report".
     const last = prior.length ? prior[prior.length - 1] : null;
-    const baseSkew = median(prior.map(s => s.skewPct).filter(Number.isFinite));
-    const haveSkewBaseline = prior.length >= MIN_BASELINE_N;
+    // A skew percentage is meaningless without knowing which token it describes.
+    // Valuing on-chain changed the base token from Dexscreener's pick to token0,
+    // so stored percentages flipped sides mid-history and the median started
+    // comparing one token's share against the other's -- eight false skew flags.
+    // Samples now carry their base symbol; older ones without it are dropped.
+    const curBase = row.skew?.baseSym, curQuote = row.skew?.quoteSym;
+    const alignedSkews = prior
+      .map(s => {
+        if (!Number.isFinite(s.skewPct) || !s.skewBase) return null;
+        if (s.skewBase === curBase) return s.skewPct;
+        if (s.skewBase === curQuote) return 100 - s.skewPct;   // same pool, other side
+        return null;
+      })
+      .filter(v => v != null);
+    const baseSkew = median(alignedSkews);
+    const haveSkewBaseline = alignedSkews.length >= MIN_BASELINE_N;
     row.lastPushDay = last?.day ?? null;
     row.lastPushTvl = last?.tvlUsd ?? null;
     row.devPct = tvl != null && last && last.tvlUsd ? ((tvl - last.tvlUsd) / last.tvlUsd) * 100 : null;
@@ -332,7 +346,8 @@ async function main() {
     // Dexscreener and on-chain are both pool-wide and comparable; an internal-only
     // day is a different measure and is not sampled as if it were the pool's TVL.
     if (tvl != null && !samples.some(s => s.day === today))
-      samples.push({ day: today, source: "poolwide", tvlUsd: tvl, skewPct: basePct ?? null, internalUsd: meta.internalUsd });
+      samples.push({ day: today, source: "poolwide", tvlUsd: tvl, skewPct: basePct ?? null,
+                     skewBase: row.skew?.baseSym ?? null, internalUsd: meta.internalUsd });
     // don't write an empty array for pools we never got a pool-wide reading for
     if (samples.length) hist.samples[addr] = samples.slice(-(HISTORY_DAYS + 1));
 
