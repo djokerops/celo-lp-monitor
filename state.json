@@ -1,7 +1,15 @@
 {
   "poolFlags": [
+    "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f:skew_shift",
+    "0x070d575a713eaf5025462d0865fb0dac4b14bc38:skew_shift",
     "0x1c8dafd358d308b880f71edb5170b010b106ca60:out_of_range",
-    "0x60ac25da2ada3be14a2a8c04e45b072bed965966:out_of_range"
+    "0x1c8dafd358d308b880f71edb5170b010b106ca60:skew_shift",
+    "0x59abe068150be95582479a405f2734cb533f9354:skew_shift",
+    "0x60ac25da2ada3be14a2a8c04e45b072bed965966:out_of_range",
+    "0x60ac25da2ada3be14a2a8c04e45b072bed965966:skew_shift",
+    "0x61ef8708fc240dc7f9f2c0d81c3124df2fd8829f:skew_shift",
+    "0x6cde5f5a192fbf3fd84df983aa6dc30dbd9f8fac:skew_shift",
+    "0xb1ea2e17c8abcfa5ba111c92a9a1ad8c5728153f:skew_shift"
   ],
   "lastDigestDay": "2026-09-21"
 }
