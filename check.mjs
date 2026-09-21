@@ -173,7 +173,10 @@ function renderSlack(r) {
   const ph = r.poolHealth;
   const flaggedPools = ph ? ph.pools.filter(p => p.flags.some(f => f.notify)) : [];
   const outCount = Object.values(r.poolRange || {}).reduce((n, g) => n + g.outCount, 0);
-  const clean = flaggedPools.length === 0;
+  // No pool data is not the same as nothing wrong. Saying "all clear" when the
+  // check crashed is worse than saying nothing.
+  const phMissing = !ph || !ph.pools?.length;
+  const clean = !phMissing && flaggedPools.length === 0;
 
   const head = r.digest
     ? `${clean ? "🟢" : "🔴"} Celo LP — daily digest`
@@ -183,9 +186,15 @@ function renderSlack(r) {
   lines.push(outCount
     ? `${r.totalOpenPositions} positions · *${outCount} out of range*`
     : `*All ${r.totalOpenPositions} positions in range*`);
-  lines.push(flaggedPools.length
-    ? `*${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged* — ${flaggedPools.map(p => p.pair).join(", ")}`
-    : `*All clear — no pool flags*`);
+  // A partial read must not look like a complete one: if positions could not be
+  // enumerated, the count above is an undercount and the ranges are incomplete.
+  if (r.errors.length)
+    lines.push(`:warning: *${r.errors.length} read error${r.errors.length > 1 ? "s" : ""} this run* — position counts and ranges may be incomplete`);
+  lines.push(phMissing
+    ? `:warning: *Pool health unavailable this run* — no pool data was collected, so pool flags are unknown`
+    : flaggedPools.length
+      ? `*${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged* — ${flaggedPools.map(p => p.pair).join(", ")}`
+      : `*All clear — no pool flags*`);
 
   const detail = [];
   for (const p of flaggedPools)
@@ -223,7 +232,7 @@ function renderSlack(r) {
     { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
   ];
   if (detail.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: detail.join("\n").slice(0, 2900) } });
-  blocks.push({ type: "section", text: { type: "mrkdwn", text: table.slice(0, 2900) } });
+  if (body.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: table.slice(0, 2900) } });
   blocks.push({ type: "context", elements: [{ type: "mrkdwn", text:
     `${r.checkedAt} · <https://github.com/djokerops/celo-lp-monitor/blob/main/status.md|full report>`
     + `\n* message better viewed on pc` }] });
@@ -246,7 +255,11 @@ function renderStatus(r) {
   // completely clean day. Flagged pools additionally get a line of detail below it.
   const ph = r.poolHealth;
   const flaggedPools = ph ? ph.pools.filter(p => p.flags.some(f => f.notify)) : [];
-  if (ph) {
+  if (!ph || !ph.pools?.length) {
+    out.push(``, `## ⚠️ Pool health unavailable`, ``,
+      `_No pool data was collected this run, so pool TVL, splits and flags are unknown._`,
+      `_Position ranges below are unaffected — they are read straight from the chain._`);
+  } else {
     while (out.length && out[out.length - 1] === "") out.pop();
     out.push(``, flaggedPools.length
       ? `## ⚠️ Pool health — ${flaggedPools.length} pool${flaggedPools.length > 1 ? "s" : ""} flagged: ${flaggedPools.map(p => p.pair).join(", ")}`

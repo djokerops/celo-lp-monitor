@@ -319,7 +319,9 @@ async function main() {
           type: "skew_shift",
           severity: "warn",
           notify: true,
-          detail: `${d.baseToken?.symbol} share ${basePct.toFixed(0)}% vs ${baseSkew.toFixed(0)}% baseline (${delta >= 0 ? "+" : ""}${delta.toFixed(0)} pts, threshold ±${SKEW_DELTA_PTS})`,
+          // row.skew, not d: pools Dexscreener does not index have no `d` at all,
+          // yet they do have a skew now that every pool is valued on-chain.
+          detail: `${row.skew.baseSym} share ${basePct.toFixed(0)}% vs ${baseSkew.toFixed(0)}% baseline (${delta >= 0 ? "+" : ""}${delta.toFixed(0)} pts, threshold ±${SKEW_DELTA_PTS})`,
         });
     }
 
