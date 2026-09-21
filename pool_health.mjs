@@ -45,6 +45,11 @@ const PEG_URGENT_PCT = Number(process.env.PEG_URGENT_PCT ?? 1.0);
 const VOL_H24_PCT = Number(process.env.VOL_H24_PCT ?? 8);
 const HISTORY_DAYS = Number(process.env.HISTORY_DAYS ?? 7);
 const MIN_BASELINE_N = Number(process.env.MIN_BASELINE_N ?? 3);
+// Skew movement is recorded but does not raise a flag: the Split column already
+// shows each pool's composition every run, so a "share vs baseline" line repeats
+// what the table says and pushes the genuinely actionable items down the message.
+// SKEW_NOTIFY=1 turns it back into an alert.
+const SKEW_NOTIFY = (process.env.SKEW_NOTIFY ?? "0") === "1";
 const ONCHAIN_FALLBACK = (process.env.ONCHAIN_FALLBACK ?? "1") !== "0";
 const RPC = process.env.CELO_RPC ?? "https://forno.celo.org";
 
@@ -332,7 +337,7 @@ async function main() {
         row.flags.push({
           type: "skew_shift",
           severity: "warn",
-          notify: true,
+          notify: SKEW_NOTIFY,
           // row.skew, not d: pools Dexscreener does not index have no `d` at all,
           // yet they do have a skew now that every pool is valued on-chain.
           detail: `${row.skew.baseSym} share ${basePct.toFixed(0)}% vs ${baseSkew.toFixed(0)}% baseline (${delta >= 0 ? "+" : ""}${delta.toFixed(0)} pts, threshold ±${SKEW_DELTA_PTS})`,
