@@ -382,11 +382,16 @@ async function main() {
   // --- transition detection via state file ---
   let prevPoolFlags = [];
   let lastDigestDay = null;
+  // Flags already announced to Slack since the last digest. A pool sitting on its
+  // band edge crosses back and forth for days; announcing each crossing is noise,
+  // and the next digest restates the pool's state anyway.
+  let announced = [];
   if (existsSync(STATE_FILE)) {
     try {
       const st = JSON.parse(readFileSync(STATE_FILE, "utf8"));
       prevPoolFlags = st.poolFlags || [];
       lastDigestDay = st.lastDigestDay ?? null;
+      announced = st.announcedSinceDigest || [];
     } catch {}
   }
 
@@ -438,12 +443,13 @@ async function main() {
   // went out -- for firing one on demand without waiting for the window.
   const digestDue = process.env.FORCE_DIGEST === "1"
     || (new Date().getUTCHours() >= DIGEST_UTC_HOUR && lastDigestDay !== today);
-  const flagChange = newPoolFlags.length > 0 || clearedPoolFlags.length > 0;
-  const publish = digestDue || flagChange;
+  // Only something we have not already said out loud since the last digest earns
+  // an out-of-band post. Clearing never does: the digest reports the state.
+  const unannounced = poolFlags.filter(f => !announced.includes(f));
+  const publish = digestDue || unannounced.length > 0;
 
   const reasons = [];
-  if (newPoolFlags.length) reasons.push(`${newPoolFlags.length} new pool flag(s)`);
-  if (clearedPoolFlags.length) reasons.push(`${clearedPoolFlags.length} pool flag(s) cleared`);
+  if (unannounced.length) reasons.push(unannounced.map(f => flagNames.get(f) ?? f).join("; "));
 
   // No timestamp here on purpose: this file must change ONLY when we publish, so
   // CI can use its git-diff as both the commit and the Slack trigger.
@@ -451,9 +457,16 @@ async function main() {
   // differs from the key being absent, which shows up as a file change and makes
   // the workflow think we published when check.mjs decided not to.
   const nextDigestDay = digestDue ? today : lastDigestDay;
-  writeFileSync(STATE_FILE, JSON.stringify(
-    nextDigestDay ? { poolFlags, lastDigestDay: nextDigestDay } : { poolFlags },
-    null, 2));
+  // A digest restates everything, so it resets the window to whatever is flagged
+  // right then. An out-of-band post adds to it. A quiet run leaves it alone.
+  const nextAnnounced = digestDue ? [...poolFlags]
+    : publish ? [...new Set([...announced, ...poolFlags])].sort()
+    : announced;
+  writeFileSync(STATE_FILE, JSON.stringify({
+    poolFlags,
+    ...(nextDigestDay ? { lastDigestDay: nextDigestDay } : {}),
+    announcedSinceDigest: nextAnnounced,
+  }, null, 2));
 
   const report = {
     checkedAt: new Date().toISOString(),
