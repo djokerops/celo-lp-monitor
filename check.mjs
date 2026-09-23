@@ -44,7 +44,9 @@ function loadAllowlist() {
   }
 }
 
-const RPC = "https://forno.celo.org";
+// CELO_RPC lets the tests point at a stub that answers every call with zero, so
+// no wallet holds a position and the publish path runs without a chain behind it.
+const RPC = process.env.CELO_RPC ?? "https://forno.celo.org";
 const NFPM = "0x3d79EdAaBC0EaB6F08ED885C05Fc0B014290D95A";
 const FACTORY = "0xAfE208a311B21f13EF87E33A90049fC17A7acDEc";
 
