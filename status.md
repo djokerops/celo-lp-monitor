@@ -1,31 +1,31 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-09-25T14:00:50.215Z_
+_Last checked: 2026-09-26T11:00:39.917Z_
 
-_Incident update — USD₮/USAT out_of_range_
+_Daily digest_
 
 ## ⚠️ Pool health — 3 pools flagged: CELO/stCELO, USD₮/USAT, USDm/EURm
 
 | Pool | TVL | Internal | Price | Balance split | Range | 24h Δ | Status |
 |------|-----|----------|-------|---------------|-------|-------|--------|
-| CELO/stCELO | $898,164 | $866,193 | $0.09335 | 92.57% CELO / 7.43% stCELO | 2 of 3 out | +4.8% | 🔴 out of range |
-| USD₮/USDm | $643,799 | $627,490 | $0.9999 | 62.31% USD₮ / 37.69% USDm | in range | -0.0% | OK |
-| CELO/USD₮ | $206,871 | $184,306 | $0.09333 | 37.30% CELO / 62.70% USD₮ | in range | +1.7% | OK |
-| USD₮/WBTC | $205,526 | $191,368 | $0.9999 | 48.93% USD₮ / 51.07% WBTC | in range | -1.8% | OK |
-| USD₮/WETH | $204,899 | $202,512 | $0.9999 | 53.20% USD₮ / 46.80% WETH | in range | -2.5% | OK |
-| USD₮/USDC | $187,418 | $166,597 | $0.9999 | 39.99% USD₮ / 60.01% USDC | in range | +0.0% | OK |
-| USD₮/cNGN | $180,754 | $168,236 | $0.9999 | 50.79% USD₮ / 49.21% cNGN | in range | +0.1% | OK |
-| USD₮/GBPm | $106,035 | $105,049 | $0.9999 | 30.27% USD₮ / 69.73% GBPm | in range | -0.1% | OK |
-| USD₮/USAT | $105,239 | $105,274 | $0.9999 | 14.57% USD₮ / 85.43% USAT | 1 of 2 out | -0.1% | 🔴 out of range |
-| USD₮/AUDm | $100,578 | $99,401 | $0.9999 | 98.32% USD₮ / 1.68% AUDm | in range | -0.0% | OK |
-| USD₮/NGNm | $66,277 | $65,634 | $0.9999 | 67.74% USD₮ / 32.26% NGNm | in range | -0.0% | OK |
-| USDm/EURm | $48,191 | $48,096 | $1.0000 | 0.18% USDm / 99.82% EURm | out of range | -0.7% | 🔴 out of range |
-| PHPm/USD₮ | $42,534 | $35,213 | $0.01597 | 52.43% PHPm / 47.57% USD₮ | in range | -0.0% | OK |
+| CELO/stCELO | $937,957 | $866,193 | $0.09749 | 92.57% CELO / 7.43% stCELO | 2 of 3 out | +6.2% | 🔴 out of range |
+| USD₮/USDm | $643,787 | $627,490 | $0.9999 | 62.79% USD₮ / 37.21% USDm | in range | -0.0% | OK |
+| CELO/USD₮ | $210,332 | $184,306 | $0.09768 | 34.80% CELO / 65.20% USD₮ | in range | +2.0% | OK |
+| USD₮/WBTC | $205,718 | $191,368 | $0.9999 | 48.98% USD₮ / 51.02% WBTC | in range | -2.0% | OK |
+| USD₮/WETH | $204,487 | $202,512 | $0.9999 | 52.98% USD₮ / 47.02% WETH | in range | -2.8% | OK |
+| USD₮/USDC | $187,425 | $166,597 | $0.9999 | 42.10% USD₮ / 57.90% USDC | in range | +0.0% | OK |
+| USD₮/cNGN | $180,944 | $168,236 | $0.9999 | 51.84% USD₮ / 48.16% cNGN | in range | +0.1% | OK |
+| USD₮/GBPm | $106,033 | $105,049 | $0.9999 | 30.27% USD₮ / 69.73% GBPm | in range | -0.0% | OK |
+| USD₮/USAT | $105,166 | $105,274 | $0.9999 | 13.81% USD₮ / 86.19% USAT | 1 of 2 out | -0.1% | 🔴 out of range |
+| USD₮/AUDm | $100,576 | $99,401 | $0.9999 | 98.32% USD₮ / 1.68% AUDm | in range | -0.0% | OK |
+| USD₮/NGNm | $66,276 | $65,634 | $0.9999 | 67.74% USD₮ / 32.26% NGNm | in range | -0.0% | OK |
+| USDm/EURm | $48,258 | $48,096 | $1.0000 | 0.18% USDm / 99.82% EURm | out of range | -0.2% | 🔴 out of range |
+| PHPm/USD₮ | $42,553 | $35,213 | $0.01599 | 52.44% PHPm / 47.56% USD₮ | in range | +0.0% | OK |
 | USD₮/BRLA | $30,667 | $15,422 | $0.9999 | 69.97% USD₮ / 30.03% BRLA | in range | -0.0% | OK |
-| USD₮/wBRL | $28,215 | $28,216 | $0.9999 | 16.16% USD₮ / 83.84% wBRL | in range | -0.4% | OK |
-| KESm/USD₮ | $11,432 | $1,014 | $0.007665 | 95.16% KESm / 4.84% USD₮ | in range | +0.2% | OK |
-| USD₮/CELO (shallow) | $1,057 | — | $0.09313 | 76.64% CELO / 23.36% USD₮ | — | +3.2% | OK |
-| USD₮/USAT(no liq) | $1 | — | $0.9999 | 50.39% USD₮ / 49.61% USAT | — | -0.1% | OK |
+| USD₮/wBRL | $28,231 | $28,216 | $0.9999 | 16.65% USD₮ / 83.35% wBRL | in range | +0.1% | OK |
+| KESm/USD₮ | $11,509 | $1,014 | $0.007720 | 95.13% KESm / 4.87% USD₮ | in range | +0.8% | OK |
+| USD₮/CELO (shallow) | $1,095 | — | $0.09759 | 75.71% CELO / 24.29% USD₮ | — | +4.3% | OK |
+| USD₮/USAT(no liq) | $1 | — | $0.9999 | 50.40% USD₮ / 49.60% USAT | — | -0.1% | OK |
 
 **CELO/stCELO**: 2 of our 3 positions here are out of range(earning no fees) -- pool:
 `0x60Ac25Da2ADA3be14a2a8C04e45b072BEd965966` · out of range: LP - stabila, positionNFT(s) - 198286, 198350
