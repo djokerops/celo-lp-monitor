@@ -1,71 +1,71 @@
 {
-  "generatedAt": "2026-10-01T12:02:54.909Z",
+  "generatedAt": "2026-10-02T12:01:05.134Z",
   "thresholdUsd": 100,
   "source": "dune query 8390438 (uni-internal-liq-per-pool)",
   "pools": {
     "0x60ac25da2ada3be14a2a8c04e45b072bed965966": {
       "pair": "CELO/stCELO",
-      "tvlUsd": 965180.55
+      "tvlUsd": 952697.81
     },
     "0x5dc631ad6c26bea1a59fbf2c2680cf3df43d249f": {
       "pair": "USD₮/USDm",
-      "tvlUsd": 627412.45
+      "tvlUsd": 627486.75
     },
     "0xf55791afbb35ad42984f18d6fe3e1ff73d81900c": {
       "pair": "USD₮/WETH",
-      "tvlUsd": 202736.16
-    },
-    "0x6cde5f5a192fbf3fd84df983aa6dc30dbd9f8fac": {
-      "pair": "CELO/USD₮",
-      "tvlUsd": 191170.29
+      "tvlUsd": 203835.21
     },
     "0x57332c214e647063bb4c5a73e5a8b7bba79be1e4": {
       "pair": "USD₮/WBTC",
-      "tvlUsd": 190659.55
+      "tvlUsd": 192779.9
+    },
+    "0x6cde5f5a192fbf3fd84df983aa6dc30dbd9f8fac": {
+      "pair": "CELO/USD₮",
+      "tvlUsd": 190304.68
     },
     "0x6519d56eb0a69fc0338657784c783b169b8f7d32": {
       "pair": "USD₮/cNGN",
-      "tvlUsd": 168711.99
+      "tvlUsd": 169123.29
     },
     "0x1a810e0b6c2dd5629afa2f0c898b9512c6f78846": {
       "pair": "USD₮/USDC",
-      "tvlUsd": 166576.37
+      "tvlUsd": 166582.07
     },
     "0xb1ea2e17c8abcfa5ba111c92a9a1ad8c5728153f": {
       "pair": "USD₮/GBPm",
-      "tvlUsd": 105037.37
-    },
-    "0x070d575a713eaf5025462d0865fb0dac4b14bc38": {
-      "pair": "USD₮/USAT",
-      "tvlUsd": 104949.47
+      "tvlUsd": 104844.65
     },
     "0x59abe068150be95582479a405f2734cb533f9354": {
       "pair": "USD₮/AUDm",
-      "tvlUsd": 99384.29
+      "tvlUsd": 99395.97
     },
     "0x1e2f87e1f8056fcd39695aaeb63cb475e1dd2318": {
       "pair": "USD₮/NGNm",
-      "tvlUsd": 65618.25
+      "tvlUsd": 65623.57
     },
     "0x1c8dafd358d308b880f71edb5170b010b106ca60": {
       "pair": "USDm/EURm",
-      "tvlUsd": 47841.78
+      "tvlUsd": 47555.67
     },
     "0x87dec9a2589d9e6511df84c193561b3a16cf6238": {
       "pair": "PHPm/USD₮",
-      "tvlUsd": 35195.52
+      "tvlUsd": 35172.2
     },
     "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f": {
       "pair": "USD₮/wBRL",
-      "tvlUsd": 28229.9
+      "tvlUsd": 28076.67
+    },
+    "0x070d575a713eaf5025462d0865fb0dac4b14bc38": {
+      "pair": "USD₮/USAT",
+      "tvlUsd": 24376.91
     },
     "0x14e577e42d45fd2200a9b0e31d87fe826467111a": {
       "pair": "USD₮/BRLA",
-      "tvlUsd": 15417.86
+      "tvlUsd": 15363.5
     },
     "0x61ef8708fc240dc7f9f2c0d81c3124df2fd8829f": {
       "pair": "KESm/USD₮",
-      "tvlUsd": 1013.86
+      "tvlUsd": 1013.66
     }
   }
 }
