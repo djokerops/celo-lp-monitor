@@ -1,6 +1,6 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-10-04T11:00:42.783Z_
+_Last checked: 2026-10-05T11:00:41.719Z_
 
 _Daily digest_
 
@@ -8,24 +8,24 @@ _Daily digest_
 
 | Pool | TVL | Internal | Price | Balance split | Range | 24h Δ | Status |
 |------|-----|----------|-------|---------------|-------|-------|--------|
-| CELO/stCELO | $968,764 | $952,648 | $0.1007 | 92.57% CELO / 7.43% stCELO | 2 of 3 out | +0.2% | 🔴 out of range |
-| USD₮/USDm | $643,912 | $627,754 | $0.9999 | 62.80% USD₮ / 37.20% USDm | in range | +0.0% | OK |
-| USD₮/WBTC | $214,859 | $191,851 | $0.9999 | 51.20% USD₮ / 48.80% WBTC | in range | -1.7% | OK |
-| CELO/USD₮ | $212,844 | $190,403 | $0.1004 | 33.30% CELO / 66.70% USD₮ | in range | -0.2% | OK |
-| USD₮/WETH | $205,210 | $202,298 | $0.9999 | 53.25% USD₮ / 46.75% WETH | in range | +0.5% | OK |
-| USD₮/USDC | $187,570 | $166,646 | $0.9999 | 59.95% USD₮ / 40.05% USDC | in range | +0.0% | OK |
-| USD₮/cNGN | $182,006 | $169,692 | $0.9999 | 58.03% USD₮ / 41.97% cNGN | in range | -0.1% | OK |
-| USD₮/GBPm | $105,973 | $104,930 | $0.9999 | 28.24% USD₮ / 71.76% GBPm | in range | +0.0% | OK |
-| USD₮/USAT | $105,363 | $105,208 | $0.9999 | 41.19% USD₮ / 58.81% USAT | in range | -0.0% | OK |
-| USD₮/AUDm | $100,577 | $99,437 | $0.9999 | 98.32% USD₮ / 1.68% AUDm | in range | +0.0% | OK |
-| USD₮/NGNm | $65,765 | $65,957 | $0.9999 | 68.13% USD₮ / 31.87% NGNm | in range | +0.0% | OK |
-| USDm/EURm | $47,804 | $47,436 | $1.0000 | 0.19% USDm / 99.81% EURm | out of range | -0.1% | 🔴 out of range |
-| PHPm/USD₮ | $42,494 | $35,180 | $0.01595 | 52.42% PHPm / 47.58% USD₮ | in range | +0.0% | OK |
-| USD₮/BRLA | $30,556 | $15,357 | $0.9999 | 68.23% USD₮ / 31.77% BRLA | in range | +0.0% | OK |
-| USD₮/wBRL | $28,016 | $28,042 | $0.9999 | 10.43% USD₮ / 89.57% wBRL | in range | -0.1% | OK |
-| KESm/USD₮ | $11,368 | $1,010 | $0.007619 | 95.15% KESm / 4.85% USD₮ | in range | +0.1% | OK |
-| USD₮/CELO (shallow) | $1,120 | — | $0.1005 | 75.13% CELO / 24.87% USD₮ | — | -0.5% | OK |
-| USD₮/USAT(no liq) | $1 | — | $0.9999 | 50.57% USD₮ / 49.43% USAT | — | -0.0% | OK |
+| CELO/stCELO | $1,007,923 | $940,857 | $0.1048 | 92.57% CELO / 7.43% stCELO | 2 of 3 out | +5.1% | 🔴 out of range |
+| USD₮/USDm | $643,918 | $627,791 | $0.9999 | 62.88% USD₮ / 37.12% USDm | in range | +0.0% | OK |
+| USD₮/WBTC | $215,851 | $192,175 | $0.9999 | 51.46% USD₮ / 48.54% WBTC | in range | -0.3% | OK |
+| CELO/USD₮ | $215,723 | $189,820 | $0.1046 | 30.96% CELO / 69.04% USD₮ | in range | +1.3% | OK |
+| USD₮/WETH | $205,811 | $202,881 | $0.9999 | 53.55% USD₮ / 46.45% WETH | in range | +0.5% | OK |
+| USD₮/USDC | $187,565 | $166,657 | $0.9999 | 33.29% USD₮ / 66.71% USDC | in range | -0.0% | OK |
+| USD₮/cNGN | $181,407 | $169,648 | $0.9999 | 54.40% USD₮ / 45.60% cNGN | in range | -0.3% | OK |
+| USD₮/GBPm | $105,961 | $104,934 | $0.9999 | 27.82% USD₮ / 72.18% GBPm | in range | -0.0% | OK |
+| USD₮/USAT | $105,704 | $105,185 | $0.9999 | 85.45% USD₮ / 14.55% USAT | in range | +0.3% | OK |
+| USD₮/AUDm | $100,578 | $99,448 | $0.9999 | 98.32% USD₮ / 1.68% AUDm | in range | +0.0% | OK |
+| USD₮/NGNm | $65,766 | $65,962 | $0.9999 | 68.13% USD₮ / 31.87% NGNm | in range | +0.0% | OK |
+| USDm/EURm | $47,436 | $47,564 | $1.0000 | 0.19% USDm / 99.81% EURm | out of range | -0.2% | 🔴 out of range |
+| PHPm/USD₮ | $42,493 | $35,182 | $0.01594 | 52.42% PHPm / 47.58% USD₮ | in range | +0.0% | OK |
+| USD₮/BRLA | $30,556 | $15,325 | $0.9999 | 68.23% USD₮ / 31.77% BRLA | in range | +0.0% | OK |
+| USD₮/wBRL | $28,328 | $28,025 | $0.9999 | 19.48% USD₮ / 80.52% wBRL | in range | +1.1% | OK |
+| KESm/USD₮ | $11,415 | $1,010 | $0.007652 | 95.16% KESm / 4.84% USD₮ | in range | +0.6% | OK |
+| USD₮/CELO (shallow) | $1,152 | — | $0.1043 | 74.43% CELO / 25.57% USD₮ | — | +2.6% | OK |
+| USD₮/USAT(no liq) | $1 | — | $0.9999 | 50.36% USD₮ / 49.64% USAT | — | +0.4% | OK |
 
 **CELO/stCELO**: 2 of our 3 positions here are out of range(earning no fees) -- pool:
 `0x60Ac25Da2ADA3be14a2a8C04e45b072BEd965966` · out of range: LP - stabila, positionNFT(s) - 198286, 198350
