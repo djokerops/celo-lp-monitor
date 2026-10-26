@@ -1,6 +1,6 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-10-25T11:00:42.984Z_
+_Last checked: 2026-10-26T11:00:36.896Z_
 
 _Daily digest_
 
@@ -8,23 +8,23 @@ _Daily digest_
 
 | Pool | TVL | Internal | Price | Balance split | Range | 24h Δ | Status |
 |------|-----|----------|-------|---------------|-------|-------|--------|
-| CELO/stCELO | $737,316 | $749,762 | $0.07619 | 93.22% CELO / 6.78% stCELO | 2 of 3 out | -5.0% | 🔴 out of range |
-| USD₮/USDm | $643,617 | $627,158 | $0.9989 | 92.08% USD₮ / 7.92% USDm | in range | -0.0% | OK |
-| USD₮/WBTC | $275,160 | $187,389 | $0.9989 | 46.26% USD₮ / 53.74% WBTC | in range | -0.8% | OK |
-| CELO/USD₮ | $190,437 | $172,619 | $0.07600 | 48.06% CELO / 51.94% USD₮ | in range | -2.8% | OK |
-| USD₮/WETH | $190,435 | $190,990 | $0.9989 | 46.06% USD₮ / 53.94% WETH | in range | -1.7% | OK |
-| USD₮/USDC | $187,764 | $166,504 | $0.9989 | 87.19% USD₮ / 12.81% USDC | 1 of 2 out | +0.0% | 🔴 out of range |
-| USD₮/cNGN | $180,871 | $168,406 | $0.9989 | 52.31% USD₮ / 47.69% cNGN | in range | -0.0% | OK |
-| USD₮/USAT | $143,874 | $104,859 | $0.9989 | 67.64% USD₮ / 32.36% USAT | 1 of 2 out | -0.4% | 🔴 out of range |
-| USD₮/GBPm | $106,576 | $105,534 | $0.9989 | 56.12% USD₮ / 43.88% GBPm | in range | -0.0% | OK |
-| USD₮/AUDm | $100,446 | $99,303 | $0.9989 | 88.22% USD₮ / 11.78% AUDm | in range | -0.0% | OK |
-| USD₮/NGNm | $65,704 | $65,438 | $0.9989 | 68.13% USD₮ / 31.87% NGNm | in range | -0.0% | OK |
-| USDm/EURm | $47,547 | $47,290 | $1.0001 | 0.19% USDm / 99.81% EURm | out of range | +0.4% | 🔴 out of range |
-| PHPm/USD₮ | $42,223 | $34,985 | $0.01577 | 52.38% PHPm / 47.62% USD₮ | in range | -0.0% | OK |
-| USD₮/BRLA | $30,906 | $15,705 | $0.9989 | 74.55% USD₮ / 25.45% BRLA | in range | -0.0% | OK |
-| USD₮/wBRL | $28,956 | $28,940 | $0.9989 | 41.19% USD₮ / 58.81% wBRL | in range | +0.0% | OK |
-| KESm/USD₮ | $11,515 | $1,017 | $0.007723 | 94.82% KESm / 5.18% USD₮ | in range | -0.0% | OK |
-| USD₮/CELO (shallow) | $902 | — | $0.07610 | 81.27% CELO / 18.73% USD₮ | — | -5.0% | OK |
+| CELO/stCELO | $747,623 | $727,906 | $0.07725 | 94.11% CELO / 5.89% stCELO | 2 of 3 out | -1.4% | 🔴 out of range |
+| USD₮/USDm | $643,572 | $627,230 | $0.9989 | 95.12% USD₮ / 4.88% USDm | in range | -0.0% | OK |
+| USD₮/WBTC | $274,654 | $186,889 | $0.9989 | 47.00% USD₮ / 53.00% WBTC | in range | -0.3% | OK |
+| CELO/USD₮ | $191,523 | $169,975 | $0.07690 | 47.45% CELO / 52.55% USD₮ | in range | -1.0% | OK |
+| USD₮/WETH | $190,470 | $189,879 | $0.9989 | 46.08% USD₮ / 53.92% WETH | in range | -0.9% | OK |
+| USD₮/USDC | $187,774 | $166,526 | $0.9989 | 84.67% USD₮ / 15.33% USDC | 1 of 2 out | +0.0% | 🔴 out of range |
+| USD₮/cNGN | $180,140 | $168,416 | $0.9989 | 48.49% USD₮ / 51.51% cNGN | in range | -0.4% | OK |
+| USD₮/USAT | $143,861 | $104,873 | $0.9989 | 67.76% USD₮ / 32.24% USAT | 1 of 2 out | -0.0% | 🔴 out of range |
+| USD₮/GBPm | $106,567 | $105,542 | $0.9989 | 56.12% USD₮ / 43.88% GBPm | in range | -0.0% | OK |
+| USD₮/AUDm | $100,437 | $99,314 | $0.9989 | 88.22% USD₮ / 11.78% AUDm | in range | -0.0% | OK |
+| USD₮/NGNm | $65,679 | $65,444 | $0.9989 | 67.57% USD₮ / 32.43% NGNm | in range | -0.0% | OK |
+| USDm/EURm | $47,498 | $47,311 | $0.9981 | 0.19% USDm / 99.81% EURm | out of range | -0.1% | 🔴 out of range |
+| PHPm/USD₮ | $42,101 | $34,980 | $0.01568 | 52.36% PHPm / 47.64% USD₮ | in range | -0.3% | OK |
+| USD₮/BRLA | $30,354 | $15,699 | $0.9989 | 65.74% USD₮ / 34.26% BRLA | in range | -1.8% | OK |
+| USD₮/wBRL | $27,717 | $28,918 | $0.9989 | 2.09% USD₮ / 97.91% wBRL | in range | -4.3% | OK |
+| KESm/USD₮ | $11,514 | $1,017 | $0.007723 | 94.63% KESm / 5.37% USD₮ | in range | -0.0% | OK |
+| USD₮/CELO (shallow) | $911 | — | $0.07709 | 80.94% CELO / 19.06% USD₮ | — | -1.6% | OK |
 | USD₮/USAT(no liq) | $1 | — | $0.9989 | 50.34% USD₮ / 49.66% USAT | — | -0.0% | OK |
 
 **CELO/stCELO**: 2 of our 3 positions here are out of range(earning no fees) -- pool:
