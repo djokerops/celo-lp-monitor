@@ -1,5 +1,6 @@
 {
   "poolFlags": [
+    "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f:tvl_swing",
     "0x070d575a713eaf5025462d0865fb0dac4b14bc38:out_of_range",
     "0x1a810e0b6c2dd5629afa2f0c898b9512c6f78846:out_of_range",
     "0x1c8dafd358d308b880f71edb5170b010b106ca60:out_of_range",
@@ -7,6 +8,7 @@
   ],
   "lastDigestDay": "2026-10-28",
   "announcedSinceDigest": [
+    "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f:tvl_swing",
     "0x070d575a713eaf5025462d0865fb0dac4b14bc38:out_of_range",
     "0x1a810e0b6c2dd5629afa2f0c898b9512c6f78846:out_of_range",
     "0x1c8dafd358d308b880f71edb5170b010b106ca60:out_of_range",

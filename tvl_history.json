@@ -830,14 +830,6 @@
     ],
     "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f": [
       {
-        "day": "2026-10-20",
-        "source": "poolwide",
-        "tvlUsd": 28849.993508541407,
-        "skewPct": 37.271114430860294,
-        "skewBase": "USD₮",
-        "internalUsd": 28788.1
-      },
-      {
         "day": "2026-10-21",
         "source": "poolwide",
         "tvlUsd": 28878.352662543784,
@@ -892,6 +884,14 @@
         "skewPct": 100,
         "skewBase": "USD₮",
         "internalUsd": 28148.34
+      },
+      {
+        "day": "2026-10-28",
+        "source": "poolwide",
+        "tvlUsd": 27638.658615921115,
+        "skewPct": 0.0838777060278853,
+        "skewBase": "USD₮",
+        "internalUsd": 27305.16
       }
     ],
     "0x61ef8708fc240dc7f9f2c0d81c3124df2fd8829f": [
