@@ -1,6 +1,6 @@
 # Celo LP Range Monitor
 
-_Last checked: 2026-11-01T11:00:34.678Z_
+_Last checked: 2026-11-02T11:00:42.840Z_
 
 _Daily digest_
 
@@ -8,24 +8,24 @@ _Daily digest_
 
 | Pool | TVL | Internal | Price | Balance split | Range | 24h Δ | Status |
 |------|-----|----------|-------|---------------|-------|-------|--------|
-| CELO/stCELO | $735,777 | $694,741 | $0.07602 | 95.08% CELO / 4.92% stCELO | 2 of 3 out | +4.1% | 🔴 out of range |
-| USD₮/USDm | $643,659 | $627,005 | $0.9989 | 94.13% USD₮ / 5.87% USDm | in range | +0.0% | OK |
-| USD₮/WBTC | $280,761 | $182,828 | $0.9989 | 44.93% USD₮ / 55.07% WBTC | in range | -0.5% | OK |
-| CELO/USD₮ | $190,454 | $166,234 | $0.07571 | 48.26% CELO / 51.74% USD₮ | in range | +1.7% | OK |
-| USD₮/WETH | $188,021 | $184,796 | $0.9989 | 44.86% USD₮ / 55.14% WETH | in range | +0.2% | OK |
-| USD₮/USDC | $187,888 | $166,463 | $0.9989 | 83.47% USD₮ / 16.53% USDC | 1 of 2 out | +0.0% | 🔴 out of range |
-| USD₮/cNGN | $180,559 | $168,098 | $0.9989 | 50.63% USD₮ / 49.37% cNGN | in range | +0.0% | OK |
-| USD₮/USAT | $143,952 | $104,822 | $0.9989 | 66.03% USD₮ / 33.97% USAT | 1 of 2 out | +0.1% | 🔴 out of range |
-| USD₮/GBPm | $106,632 | $105,494 | $0.9989 | 59.49% USD₮ / 40.51% GBPm | in range | +0.0% | OK |
-| USD₮/AUDm | $100,440 | $99,251 | $0.9989 | 88.24% USD₮ / 11.76% AUDm | in range | +0.0% | OK |
-| USD₮/NGNm | $65,680 | $65,555 | $0.9989 | 67.57% USD₮ / 32.43% NGNm | in range | +0.0% | OK |
-| USDm/EURm | $47,727 | $47,347 | $1.0007 | 0.19% USDm / 99.81% EURm | out of range | +1.4% | 🔴 out of range |
-| PHPm/USD₮ | $42,071 | $34,846 | $0.01566 | 52.35% PHPm / 47.65% USD₮ | in range | +0.0% | OK |
-| USD₮/BRLA | $30,182 | $15,058 | $0.9989 | 63.39% USD₮ / 36.61% BRLA | in range | +0.0% | OK |
-| USD₮/wBRL | $27,641 | $27,191 | $0.9989 | 0.08% USD₮ / 99.92% wBRL | in range | +0.0% | OK |
-| KESm/USD₮ | $11,516 | $1,017 | $0.007723 | 91.24% KESm / 8.76% USD₮ | in range | +0.0% | OK |
-| USD₮/CELO (shallow) | $899 | — | $0.07579 | 81.35% CELO / 18.65% USD₮ | — | +2.8% | OK |
-| USD₮/USAT(no liq) | $1 | — | $0.9989 | 50.34% USD₮ / 49.66% USAT | — | +0.0% | OK |
+| CELO/stCELO | $702,317 | $707,451 | $0.07256 | 95.08% CELO / 4.92% stCELO | 2 of 3 out | -3.3% | 🔴 out of range |
+| USD₮/USDm | $643,687 | $627,111 | $0.9989 | 93.84% USD₮ / 6.16% USDm | in range | +0.0% | OK |
+| USD₮/WBTC | $279,957 | $183,181 | $0.9989 | 44.59% USD₮ / 55.41% WBTC | in range | -0.5% | OK |
+| USD₮/WETH | $188,800 | $185,547 | $0.9989 | 45.21% USD₮ / 54.79% WETH | in range | +0.6% | OK |
+| USD₮/USDC | $187,909 | $166,486 | $0.9989 | 83.98% USD₮ / 16.02% USDC | 1 of 2 out | +0.0% | 🔴 out of range |
+| CELO/USD₮ | $186,205 | $167,775 | $0.07230 | 50.61% CELO / 49.39% USD₮ | in range | -2.6% | OK |
+| USD₮/cNGN | $180,394 | $168,006 | $0.9989 | 49.72% USD₮ / 50.28% cNGN | in range | -0.1% | OK |
+| USD₮/USAT | $143,946 | $104,840 | $0.9989 | 64.39% USD₮ / 35.61% USAT | 1 of 2 out | +0.5% | 🔴 out of range |
+| USD₮/GBPm | $106,674 | $105,505 | $0.9989 | 61.68% USD₮ / 38.32% GBPm | in range | +0.0% | OK |
+| USD₮/AUDm | $100,443 | $99,266 | $0.9989 | 88.24% USD₮ / 11.76% AUDm | in range | +0.0% | OK |
+| USD₮/NGNm | $65,682 | $65,563 | $0.9989 | 67.57% USD₮ / 32.43% NGNm | in range | +0.0% | OK |
+| USDm/EURm | $47,403 | $47,440 | $1.0008 | 0.19% USDm / 99.81% EURm | out of range | -0.7% | 🔴 out of range |
+| PHPm/USD₮ | $42,111 | $34,856 | $0.01569 | 52.36% PHPm / 47.64% USD₮ | in range | +0.1% | OK |
+| USD₮/BRLA | $30,183 | $15,067 | $0.9989 | 63.39% USD₮ / 36.61% BRLA | in range | +0.0% | OK |
+| USD₮/wBRL | $27,642 | $27,191 | $0.9989 | 0.08% USD₮ / 99.92% wBRL | in range | +0.0% | OK |
+| KESm/USD₮ | $11,516 | $1,017 | $0.007724 | 91.39% KESm / 8.61% USD₮ | in range | +0.0% | OK |
+| USD₮/CELO (shallow) | $866 | — | $0.07237 | 82.56% CELO / 17.44% USD₮ | — | -3.7% | OK |
+| USD₮/USAT(no liq) | $1 | — | $0.9989 | 50.35% USD₮ / 49.65% USAT | — | -0.0% | OK |
 
 **CELO/stCELO**: 2 of our 3 positions here are out of range(earning no fees) -- pool:
 `0x60Ac25Da2ADA3be14a2a8C04e45b072BEd965966` · out of range: LP - stabila, positionNFT(s) - 198286, 198350
