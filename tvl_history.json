@@ -3,14 +3,6 @@
   "samples": {
     "0x60ac25da2ada3be14a2a8c04e45b072bed965966": [
       {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 634147.0765321027,
-        "skewPct": 95.20986593960663,
-        "skewBase": "CELO",
-        "internalUsd": 611871.81
-      },
-      {
         "day": "2026-11-15",
         "source": "poolwide",
         "tvlUsd": 597715.5622443864,
@@ -65,17 +57,17 @@
         "skewPct": 95.33219159210437,
         "skewBase": "CELO",
         "internalUsd": 540958.56
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 488957.53531144944,
+        "skewPct": 95.20813375093992,
+        "skewBase": "CELO",
+        "internalUsd": 502478.08
       }
     ],
     "0x5dc631ad6c26bea1a59fbf2c2680cf3df43d249f": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 643734.7349133036,
-        "skewPct": 91.83548675655993,
-        "skewBase": "USD₮",
-        "internalUsd": 627355.92
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -131,17 +123,17 @@
         "skewPct": 96.71942939906477,
         "skewBase": "USD₮",
         "internalUsd": 627429.06
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 643390.6113801638,
+        "skewPct": 98.77391887523275,
+        "skewBase": "USD₮",
+        "internalUsd": 627228.29
       }
     ],
     "0xf55791afbb35ad42984f18d6fe3e1ff73d81900c": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 171146.44394590074,
-        "skewPct": 36.87860018496632,
-        "skewBase": "USD₮",
-        "internalUsd": 170085.84
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -197,17 +189,17 @@
         "skewPct": 27.99489099815628,
         "skewBase": "USD₮",
         "internalUsd": 158220.51
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 155929.88099504946,
+        "skewPct": 29.5999251384604,
+        "skewBase": "USD₮",
+        "internalUsd": 148650.4
       }
     ],
     "0x57332c214e647063bb4c5a73e5a8b7bba79be1e4": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 236880.50323463004,
-        "skewPct": 39.482564305737114,
-        "skewBase": "USD₮",
-        "internalUsd": 172297.29
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -263,17 +255,17 @@
         "skewPct": 34.60873471762047,
         "skewBase": "USD₮",
         "internalUsd": 159801.98
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 199274.1706903028,
+        "skewPct": 35.501496237670764,
+        "skewBase": "USD₮",
+        "internalUsd": 151907.11
       }
     ],
     "0x6cde5f5a192fbf3fd84df983aa6dc30dbd9f8fac": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 178132.96915754917,
-        "skewPct": 55.26392589025166,
-        "skewBase": "CELO",
-        "internalUsd": 154935.12
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -329,17 +321,17 @@
         "skewPct": 66.37826062803377,
         "skewBase": "CELO",
         "internalUsd": 143085.07
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 157624.89862084205,
+        "skewPct": 66.81666253041064,
+        "skewBase": "CELO",
+        "internalUsd": 135894.87
       }
     ],
     "0x6519d56eb0a69fc0338657784c783b169b8f7d32": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 178135.72844972188,
-        "skewPct": 38.71751690254213,
-        "skewBase": "USD₮",
-        "internalUsd": 165740.97
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -395,17 +387,17 @@
         "skewPct": 25.910283601975863,
         "skewBase": "USD₮",
         "internalUsd": 162883.15
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 175351.06389807412,
+        "skewPct": 27.435989835751823,
+        "skewBase": "USD₮",
+        "internalUsd": 162762.84
       }
     ],
     "0x1a810e0b6c2dd5629afa2f0c898b9512c6f78846": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 188153.49963731482,
-        "skewPct": 84.46205851701063,
-        "skewBase": "USD₮",
-        "internalUsd": 166547.15
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -461,6 +453,14 @@
         "skewPct": 89.49686838882837,
         "skewBase": "USD₮",
         "internalUsd": 166568.76
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 201518.73392187085,
+        "skewPct": 72.60516214691188,
+        "skewBase": "USD₮",
+        "internalUsd": 166526.94
       }
     ],
     "0x5d8ef8b839be522b9e3d60a51edb5837cd0b2391": [
@@ -499,14 +499,6 @@
       }
     ],
     "0xb1ea2e17c8abcfa5ba111c92a9a1ad8c5728153f": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 106013.68649709129,
-        "skewPct": 32.34912905928628,
-        "skewBase": "USD₮",
-        "internalUsd": 105230.39
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -562,17 +554,17 @@
         "skewPct": 9.234578384004775,
         "skewBase": "USD₮",
         "internalUsd": 104239.97
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 105269.59519888947,
+        "skewPct": 10.94258759270984,
+        "skewBase": "USD₮",
+        "internalUsd": 104273.45
       }
     ],
     "0x070d575a713eaf5025462d0865fb0dac4b14bc38": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 144524.14893196535,
-        "skewPct": 66.85706419509623,
-        "skewBase": "USD₮",
-        "internalUsd": 104892.51
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -628,17 +620,17 @@
         "skewPct": 68.37524753504148,
         "skewBase": "USD₮",
         "internalUsd": 104910.22
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 144274.95034205975,
+        "skewPct": 66.96226733831922,
+        "skewBase": "USD₮",
+        "internalUsd": 104869.06
       }
     ],
     "0x59abe068150be95582479a405f2734cb533f9354": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 100447.78072979857,
-        "skewPct": 88.24191240957974,
-        "skewBase": "USD₮",
-        "internalUsd": 99300.14
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -694,17 +686,17 @@
         "skewPct": 88.24247099323918,
         "skewBase": "USD₮",
         "internalUsd": 99310.02
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 100424.01452536446,
+        "skewPct": 88.24247099323918,
+        "skewBase": "USD₮",
+        "internalUsd": 99282.22
       }
     ],
     "0x1c8dafd358d308b880f71edb5170b010b106ca60": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 46703.813624534625,
-        "skewPct": 0.1570465176839927,
-        "skewBase": "USDm",
-        "internalUsd": 46860.65
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -760,17 +752,17 @@
         "skewPct": 0.15446979886213397,
         "skewBase": "USDm",
         "internalUsd": 46376.69
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 46521.86514239629,
+        "skewPct": 0.15446556448605556,
+        "skewBase": "USDm",
+        "internalUsd": 46470.36
       }
     ],
     "0x87dec9a2589d9e6511df84c193561b3a16cf6238": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 42137.199610528434,
-        "skewPct": 52.365189252850996,
-        "skewBase": "PHPm",
-        "internalUsd": 34917.33
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -826,17 +818,17 @@
         "skewPct": 52.3606256383222,
         "skewBase": "PHPm",
         "internalUsd": 34903.27
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 42107.26968492438,
+        "skewPct": 52.361337839449554,
+        "skewBase": "PHPm",
+        "internalUsd": 34893.82
       }
     ],
     "0x01c3cf91cdf7b34181c7ec8566c0236951fea40f": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 27643.23091382527,
-        "skewPct": 0.08391507319106638,
-        "skewBase": "USD₮",
-        "internalUsd": 26082.5
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -892,17 +884,17 @@
         "skewPct": 0.06296740381732983,
         "skewBase": "USD₮",
         "internalUsd": 24818.29
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 27625.52359622694,
+        "skewPct": 0.06296740381732983,
+        "skewBase": "USD₮",
+        "internalUsd": 24533.06
       }
     ],
     "0x61ef8708fc240dc7f9f2c0d81c3124df2fd8829f": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 11516.207818604584,
-        "skewPct": 93.32600047222962,
-        "skewBase": "KESm",
-        "internalUsd": 1017.65
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -958,17 +950,17 @@
         "skewPct": 95.16491124384821,
         "skewBase": "KESm",
         "internalUsd": 1012.1
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 11364.109480344892,
+        "skewPct": 95.15920429933033,
+        "skewBase": "KESm",
+        "internalUsd": 1011.07
       }
     ],
     "0xb135ebde27d366b0d62e579bae4118cb991b820e": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 802.6997853260701,
-        "skewPct": 85.13672796734176,
-        "skewBase": "CELO",
-        "internalUsd": 0
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -1024,17 +1016,17 @@
         "skewPct": 49.147887195943966,
         "skewBase": "CELO",
         "internalUsd": 0
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 0.8385052013097614,
+        "skewPct": 49.147887195943966,
+        "skewBase": "CELO",
+        "internalUsd": 0
       }
     ],
     "0x1e2f87e1f8056fcd39695aaeb63cb475e1dd2318": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 65685.2178059137,
-        "skewPct": 67.56980126868415,
-        "skewBase": "USD₮",
-        "internalUsd": 65577.62
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -1090,17 +1082,17 @@
         "skewPct": 53.74356542128208,
         "skewBase": "USD₮",
         "internalUsd": 65355.96
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 65093.8823462906,
+        "skewPct": 53.74356542128208,
+        "skewBase": "USD₮",
+        "internalUsd": 65242.12
       }
     ],
     "0x14e577e42d45fd2200a9b0e31d87fe826467111a": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 29555.058976446802,
-        "skewPct": 51.7233625916122,
-        "skewBase": "USD₮",
-        "internalUsd": 14740.05
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -1156,17 +1148,17 @@
         "skewPct": 36.557607011391426,
         "skewBase": "USD₮",
         "internalUsd": 14356.38
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 28342.044693348438,
+        "skewPct": 35.569607329417074,
+        "skewBase": "USD₮",
+        "internalUsd": 14258.45
       }
     ],
     "0xae073a816117dcd1cc237fe4cb99f89f8f8bff4f": [
-      {
-        "day": "2026-11-14",
-        "source": "poolwide",
-        "tvlUsd": 1.4258272029858607,
-        "skewPct": 50.334367802981085,
-        "skewBase": "USD₮",
-        "internalUsd": 0
-      },
       {
         "day": "2026-11-15",
         "source": "poolwide",
@@ -1220,6 +1212,14 @@
         "source": "poolwide",
         "tvlUsd": 0.00011288975441393064,
         "skewPct": 46.01361273536499,
+        "skewBase": "USD₮",
+        "internalUsd": 0
+      },
+      {
+        "day": "2026-11-22",
+        "source": "poolwide",
+        "tvlUsd": 0.00011283633864142895,
+        "skewPct": 46.02589845321418,
         "skewBase": "USD₮",
         "internalUsd": 0
       }
